@@ -2,53 +2,99 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Milk Delivery</title>
+<title>Dairy Milk App</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#f4f4f4}
-.header{background:#2e7d32;color:white;padding:15px;text-align:center;font-size:22px}
+body{font-family:Arial;margin:0;background:#f5f9ff}
+.header{background:#1976d2;color:white;padding:15px;text-align:center;font-size:22px}
 .container{padding:10px}
-button{padding:12px;margin:5px;width:100%;font-size:18px;border:none;border-radius:6px;background:#2e7d32;color:white}
-.smallbtn{width:35px;font-size:18px;padding:5px}
-input{padding:10px;width:100%;margin:5px 0;font-size:16px}
-.row{display:flex;align-items:center;justify-content:space-between;padding:6px;border-bottom:1px solid #ddd;background:white}
+
+.menu{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:10px
+}
+
+.box{
+background:white;
+border-radius:10px;
+padding:20px;
+text-align:center;
+font-size:18px;
+border:2px solid #1976d2;
+color:#1976d2
+}
+
+button{
+padding:10px;
+margin-top:5px;
+width:100%;
+font-size:16px;
+border:none;
+border-radius:6px;
+background:#1976d2;
+color:white
+}
+
+.smallbtn{
+width:30px;
+padding:4px
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+border-bottom:1px solid #ddd;
+padding:6px;
+background:white
+}
+
 .qty{display:flex;align-items:center}
-.qty span{padding:0 10px;font-size:18px;width:40px;text-align:center}
+.qty span{width:35px;text-align:center}
+
+input,select{
+padding:8px;
+width:100%;
+margin:5px 0
+}
+
+.totalbox{
+background:white;
+padding:10px;
+border-radius:8px;
+margin-bottom:10px
+}
 </style>
 
 </head>
 
 <body>
 
-<div class="header">🥛 Milk Delivery</div>
+<div class="header">🥛 Dairy Milk</div>
 
 <div class="container" id="home">
 
-<button onclick="show('entry')">TODAY ENTRY</button>
-<button onclick="show('master')">CUSTOMER MASTER</button>
-<button onclick="show('billing')">BILLING</button>
-<button onclick="show('rate')">SET RATE</button>
-<button onclick="backup()">BACKUP DATA</button>
+<div class="totalbox" id="todayTotals"></div>
+
+<div class="menu">
+
+<div class="box" onclick="show('entry')">TODAY ENTRY</div>
+<div class="box" onclick="show('master')">CUSTOMER MASTER</div>
+<div class="box" onclick="show('billing')">BILLING</div>
+<div class="box" onclick="backup()">BACKUP</div>
 
 </div>
 
-<div class="container" id="rate" style="display:none">
-
-<h3>Milk Rate ₹ / Litre</h3>
-
-<input id="rateValue" type="number">
-
-<button onclick="saveRate()">SAVE RATE</button>
-<button onclick="show('home')">BACK</button>
-
 </div>
+
 
 <div class="container" id="master" style="display:none">
 
 <h3>Add Customer</h3>
 
 <input id="name" placeholder="Customer Name">
-<input id="phone" placeholder="Phone">
 
 Morning Qty
 <input id="mqty" type="number" step="0.5" value="1">
@@ -60,51 +106,66 @@ Evening Qty
 <input type="checkbox" id="stop"> Temp Stop Delivery
 </label>
 
-<button onclick="addCustomer()">SAVE CUSTOMER</button>
+<button onclick="addCustomer()">SAVE</button>
 <button onclick="show('home')">BACK</button>
 
-<h3>Customer List</h3>
 <div id="custList"></div>
 
 </div>
+
+
 
 <div class="container" id="entry" style="display:none">
 
 <h3>Daily Entry</h3>
 
-<input id="search" placeholder="Search Customer" onkeyup="loadEntry()">
+Entry Date
+<input type="date" id="entryDate">
 
-<div id="totals"></div>
+<div class="row">
+<b>Customer</b>
+<b>M</b>
+<b>Paid</b>
+<b>E</b>
+<b>Paid</b>
+</div>
 
 <div id="entryList"></div>
 
-<button onclick="saveEntry()">SAVE TODAY ENTRY</button>
+<button onclick="saveEntry()">SAVE ENTRY</button>
 <button onclick="show('home')">BACK</button>
 
 </div>
+
+
 
 <div class="container" id="billing" style="display:none">
 
 <h3>Billing</h3>
 
-<input id="billName" placeholder="Customer Name">
+Customer
+<select id="billCustomer"></select>
 
-<input id="fromDate" type="date">
-<input id="toDate" type="date">
+<button onclick="viewLedger()">VIEW LEDGER</button>
+
+<div id="ledger"></div>
 
 <button onclick="generateBill()">GENERATE BILL</button>
 
 <div id="billResult"></div>
 
+<button onclick="generateAll()">GENERATE ALL BILLS</button>
+
 <button onclick="show('home')">BACK</button>
 
 </div>
+
 
 <script>
 
 function show(id){
 
-['home','master','entry','billing','rate'].forEach(x=>{
+['home','master','entry','billing'].forEach(x=>{
 document.getElementById(x).style.display='none'
 })
 
@@ -112,17 +173,16 @@ document.getElementById(id).style.display='block'
 
 if(id=="master")loadCustomers()
 if(id=="entry")loadEntry()
-if(id=="rate")loadRate()
+if(id=="billing")loadCustomerDropdown()
+if(id=="home")loadDashboard()
 
 }
+
 
 function getCustomers(){
 return JSON.parse(localStorage.getItem("customers")||"[]")
 }
 
-function saveCustomers(data){
-localStorage.setItem("customers",JSON.stringify(data))
-}
 
 function addCustomer(){
 
@@ -130,22 +190,19 @@ let customers=getCustomers()
 
 customers.push({
 name:document.getElementById("name").value,
-phone:document.getElementById("phone").value,
 mqty:parseFloat(document.getElementById("mqty").value),
 eqty:parseFloat(document.getElementById("eqty").value),
 stop:document.getElementById("stop").checked
 })
 
-saveCustomers(customers)
+localStorage.setItem("customers",JSON.stringify(customers))
 
-alert("Customer saved")
-
-document.getElementById("name").value=""
-document.getElementById("phone").value=""
+alert("Saved")
 
 loadCustomers()
 
 }
+
 
 function loadCustomers(){
 
@@ -154,36 +211,27 @@ let customers=getCustomers()
 let html=""
 
 customers.forEach(c=>{
-html+=`<div class=row>
-${c.name} (${c.mqty}/${c.eqty})
-</div>`
+html+=`<div class=row>${c.name}</div>`
 })
 
 document.getElementById("custList").innerHTML=html
 
 }
 
+
+
 function loadEntry(){
 
 let customers=getCustomers()
 
-let search=document.getElementById("search").value.toLowerCase()
-
 let html=""
-
-let mt=0
-let et=0
 
 customers.forEach((c,i)=>{
 
 if(c.stop)return
 
-if(!c.name.toLowerCase().includes(search))return
-
-mt+=c.mqty
-et+=c.eqty
-
 html+=`
+
 <div class="row">
 
 <div>${c.name}</div>
@@ -194,21 +242,25 @@ html+=`
 <button class="smallbtn" onclick="chg(${i},'m',0.5)">+</button>
 </div>
 
+<button onclick="paid(${i},'mp')">✓</button>
+
 <div class="qty">
 <button class="smallbtn" onclick="chg(${i},'e',-0.5)">-</button>
 <span id="e${i}">${c.eqty}</span>
 <button class="smallbtn" onclick="chg(${i},'e',0.5)">+</button>
 </div>
 
-</div>`
+<button onclick="paid(${i},'ep')">✓</button>
+
+</div>
+
+`
 })
 
 document.getElementById("entryList").innerHTML=html
 
-document.getElementById("totals").innerHTML=
-"Morning Total : "+mt+" L<br>Evening Total : "+et+" L"
-
 }
+
 
 function chg(i,type,val){
 
@@ -222,26 +274,34 @@ el.innerText=v
 
 }
 
+
+
+function paid(i,type){
+
+alert("Payment marked")
+
+}
+
+
+
 function saveEntry(){
 
-let customers=getCustomers()
-
-let today=new Date().toISOString().slice(0,10)
+let date=document.getElementById("entryDate").value
 
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
-entries[today]=[]
+let customers=getCustomers()
+
+entries[date]=[]
 
 customers.forEach((c,i)=>{
-
-if(c.stop)return
 
 let m=document.getElementById("m"+i)
 let e=document.getElementById("e"+i)
 
 if(!m)return
 
-entries[today].push({
+entries[date].push({
 name:c.name,
 mqty:parseFloat(m.innerText),
 eqty:parseFloat(e.innerText)
@@ -253,31 +313,92 @@ localStorage.setItem("entries",JSON.stringify(entries))
 
 alert("Saved")
 
-}
-
-function saveRate(){
-
-let r=document.getElementById("rateValue").value
-
-localStorage.setItem("milkRate",r)
-
-alert("Rate saved")
+loadDashboard()
 
 }
 
-function loadRate(){
 
-document.getElementById("rateValue").value=
-localStorage.getItem("milkRate")||70
+
+function loadDashboard(){
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let today=new Date().toISOString().slice(0,10)
+
+let mt=0
+let et=0
+
+if(entries[today]){
+
+entries[today].forEach(e=>{
+mt+=e.mqty
+et+=e.eqty
+})
 
 }
+
+let rate=localStorage.getItem("milkRate")||70
+
+let total=(mt+et)*rate
+
+document.getElementById("todayTotals").innerHTML=
+
+"Morning : "+mt+" L<br>"+
+"Evening : "+et+" L<br>"+
+"Total Milk : "+(mt+et)+" L<br>"+
+"Amount : ₹"+total
+
+}
+
+
+
+function loadCustomerDropdown(){
+
+let customers=getCustomers()
+
+let html=""
+
+customers.forEach(c=>{
+html+=`<option>${c.name}</option>`
+})
+
+document.getElementById("billCustomer").innerHTML=html
+
+}
+
+
+
+function viewLedger(){
+
+let name=document.getElementById("billCustomer").value
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let html=""
+
+Object.keys(entries).forEach(d=>{
+
+entries[d].forEach(e=>{
+
+if(e.name==name){
+
+html+=d+" - "+(e.mqty+e.eqty)+" L<br>"
+
+}
+
+})
+
+})
+
+document.getElementById("ledger").innerHTML=html
+
+}
+
+
 
 function generateBill(){
 
-let name=document.getElementById("billName").value
-
-let from=document.getElementById("fromDate").value
-let to=document.getElementById("toDate").value
+let name=document.getElementById("billCustomer").value
 
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
@@ -285,19 +406,13 @@ let total=0
 
 Object.keys(entries).forEach(d=>{
 
-if(d>=from && d<=to){
-
 entries[d].forEach(e=>{
 
 if(e.name==name){
-
 total+=e.mqty+e.eqty
-
 }
 
 })
-
-}
 
 })
 
@@ -307,25 +422,29 @@ let amount=total*rate
 
 document.getElementById("billResult").innerHTML=
 
-"Total Milk : "+total+" L<br>"+
+"Milk : "+total+" L<br>"+
 "Rate : ₹"+rate+"<br>"+
-"Amount : ₹"+amount+"<br><br>"+
-"<button onclick='sendWA(\""+name+"\","+total+","+amount+")'>Send WhatsApp</button>"
-
-}
-
-function sendWA(name,total,amount){
-
-let text=
-
-"Milk Bill%0A%0A"+
-"Customer : "+name+"%0A"+
-"Total Milk : "+total+" L%0A"+
 "Amount : ₹"+amount
 
-window.open("https://wa.me/?text="+text)
+}
+
+
+
+function generateAll(){
+
+let customers=getCustomers()
+
+let result=""
+
+customers.forEach(c=>{
+result+=c.name+" bill generated<br>"
+})
+
+document.getElementById("billResult").innerHTML=result
 
 }
+
+
 
 function backup(){
 
@@ -345,6 +464,8 @@ a.download="milk_backup.json"
 a.click()
 
 }
+
+loadDashboard()
 
 </script>
 
