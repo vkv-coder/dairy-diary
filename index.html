@@ -5,24 +5,9 @@
 <title>Dairy Milk</title>
 
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#f4f7ff
-}
-
-.header{
-background:#1e6bd6;
-color:white;
-text-align:center;
-padding:15px;
-font-size:22px
-}
-
-.container{
-padding:12px
-}
+body{font-family:Arial;margin:0;background:#eef3ff}
+.header{background:#2f6fd1;color:white;text-align:center;padding:15px;font-size:22px}
+.container{padding:12px}
 
 .dashboard{
 background:white;
@@ -38,12 +23,29 @@ gap:12px
 }
 
 .box{
-background:#1e6bd6;
+background:#2f6fd1;
 color:yellow;
 padding:18px;
 text-align:center;
 border-radius:10px;
 font-size:18px
+}
+
+button{
+background:#2f6fd1;
+color:yellow;
+border:none;
+padding:10px;
+margin-top:8px;
+border-radius:6px
+}
+
+.green{background:green!important;color:white!important}
+
+.qtybtn{
+width:40px;
+height:40px;
+font-size:20px
 }
 
 .row{
@@ -52,32 +54,6 @@ padding:10px;
 border-radius:8px;
 margin-bottom:10px
 }
-
-button{
-background:#1e6bd6;
-color:yellow;
-border:none;
-padding:10px;
-margin-top:6px;
-border-radius:6px;
-font-size:16px
-}
-
-.qtybtn{
-font-size:22px;
-width:40px;
-height:40px
-}
-
-.paid{
-margin-left:10px
-}
-
-.green{
-background:green!important;
-color:white!important
-}
-
 </style>
 </head>
 
@@ -90,45 +66,37 @@ color:white!important
 <div class="dashboard" id="totals"></div>
 
 <div class="menu">
-
 <div class="box" onclick="show('entry')">TODAY ENTRY</div>
 <div class="box" onclick="show('master')">CUSTOMER MASTER</div>
 <div class="box" onclick="show('billing')">BILLING</div>
 <div class="box" onclick="show('payments')">PAYMENTS</div>
-
+<div class="box" onclick="backup()">BACKUP</div>
 </div>
 
 </div>
-
 
 <div class="container" id="master" style="display:none">
 
 <h3>Add Customer</h3>
 
-<input id="name" placeholder="Customer Name">
+<input id="name" placeholder="Customer Name"><br>
+<input id="phone" placeholder="Phone Number"><br>
 
-Morning Qty
-<input id="mqty" type="number" step="0.5" value="1">
+Morning Qty<br>
+<input id="mqty" type="number" step="0.5" value="1"><br>
 
-Evening Qty
-<input id="eqty" type="number" step="0.5" value="0">
-
-<label>
-<input type="checkbox" id="stop"> Temp Stop Delivery
-</label>
+Evening Qty<br>
+<input id="eqty" type="number" step="0.5" value="0"><br>
 
 <button onclick="addCustomer()">SAVE</button>
 <button onclick="show('home')">BACK</button>
 
-<div id="custList"></div>
-
 </div>
-
 
 <div class="container" id="entry" style="display:none">
 
 <h3>Entry Date</h3>
-<input type="date" id="entryDate">
+<input type="date" id="entryDate"><br><br>
 
 <div id="entryList"></div>
 
@@ -137,36 +105,61 @@ Evening Qty
 
 </div>
 
-
 <div class="container" id="billing" style="display:none">
 
 <h3>Billing</h3>
 
 <select id="billCustomer"></select>
 
+<br><br>
+
+From
+<input type="date" id="fromDate">
+
+To
+<input type="date" id="toDate">
+
+<br><br>
+
+Rate
+<input id="rate" value="90">
+
 <button onclick="viewLedger()">VIEW LEDGER</button>
 
 <div id="ledger"></div>
 
-<button onclick="generateBill()">GENERATE BILL</button>
+<button onclick="generateBill()">GENERATE TOTAL BILL</button>
 
 <div id="billResult"></div>
+
+<button onclick="generateAll()">GENERATE ALL BILLS</button>
+
+<div id="allBills"></div>
 
 <button onclick="show('home')">BACK</button>
 
 </div>
-
 
 <div class="container" id="payments" style="display:none">
 
 <h3>Payments</h3>
 
-<div id="paymentList"></div>
+Customer
+<select id="payCustomer"></select>
+
+<br><br>
+
+Bill Amount
+<input id="billAmt">
+
+Received Amount
+<input id="recvAmt">
+
+<button onclick="savePayment()">SAVE PAYMENT</button>
 
 <button onclick="show('home')">BACK</button>
 
 </div>
-
 
 <script>
 
@@ -179,8 +172,8 @@ document.getElementById(x).style.display='none'
 document.getElementById(id).style.display='block'
 
 if(id=="entry")loadEntry()
-if(id=="master")loadCustomers()
 if(id=="billing")loadCustomerDropdown()
+if(id=="payments")loadPaymentCustomers()
 if(id=="home")loadDashboard()
 
 }
@@ -195,30 +188,14 @@ let customers=getCustomers()
 
 customers.push({
 name:document.getElementById("name").value,
+phone:document.getElementById("phone").value,
 mqty:parseFloat(document.getElementById("mqty").value),
-eqty:parseFloat(document.getElementById("eqty").value),
-stop:document.getElementById("stop").checked
+eqty:parseFloat(document.getElementById("eqty").value)
 })
 
 localStorage.setItem("customers",JSON.stringify(customers))
 
-alert("Saved")
-
-loadCustomers()
-
-}
-
-function loadCustomers(){
-
-let customers=getCustomers()
-
-let html=""
-
-customers.forEach(c=>{
-html+="<div>"+c.name+"</div>"
-})
-
-document.getElementById("custList").innerHTML=html
+alert("Customer Saved")
 
 }
 
@@ -229,8 +206,6 @@ let customers=getCustomers()
 let html=""
 
 customers.forEach((c,i)=>{
-
-if(c.stop)return
 
 html+=`
 
@@ -246,7 +221,7 @@ Morning
 <span id="m${i}">${c.mqty}</span>
 <button class="qtybtn" onclick="chg(${i},'m',0.5)">+</button>
 
-<button class="paid" id="mp${i}" onclick="paid(this)">PAID</button>
+<button id="mp${i}" onclick="paid(this)">PAID</button>
 
 <br><br>
 
@@ -256,11 +231,12 @@ Evening
 <span id="e${i}">${c.eqty}</span>
 <button class="qtybtn" onclick="chg(${i},'e',0.5)">+</button>
 
-<button class="paid" id="ep${i}" onclick="paid(this)">PAID</button>
+<button id="ep${i}" onclick="paid(this)">PAID</button>
 
 </div>
 
 `
+
 })
 
 document.getElementById("entryList").innerHTML=html
@@ -283,8 +259,6 @@ function paid(btn){
 
 btn.classList.toggle("green")
 
-alert("Payment saved")
-
 }
 
 function saveEntry(){
@@ -302,8 +276,6 @@ customers.forEach((c,i)=>{
 let m=document.getElementById("m"+i)
 let e=document.getElementById("e"+i)
 
-if(!m)return
-
 entries[date].push({
 name:c.name,
 mqty:parseFloat(m.innerText),
@@ -314,7 +286,7 @@ eqty:parseFloat(e.innerText)
 
 localStorage.setItem("entries",JSON.stringify(entries))
 
-alert("Saved")
+alert("Entry Saved")
 
 loadDashboard()
 
@@ -338,7 +310,7 @@ et+=e.eqty
 
 }
 
-let rate=localStorage.getItem("milkRate")||90
+let rate=90
 
 let total=(mt+et)*rate
 
@@ -358,7 +330,7 @@ let customers=getCustomers()
 let html=""
 
 customers.forEach(c=>{
-html+="<option>"+c.name+"</option>"
+html+=`<option>${c.name}</option>`
 })
 
 document.getElementById("billCustomer").innerHTML=html
@@ -380,13 +352,11 @@ entries[d].forEach(e=>{
 if(e.name==name){
 
 let milk=e.mqty+e.eqty
-
-let rate=90
-
+let rate=document.getElementById("rate").value
 let amt=milk*rate
 
-html+=d+" - "+milk+" L ₹"+amt+
-" <button onclick='sendWA(this,\""+name+"\","+milk+","+amt+")'>SEND</button><br>"
+html+=`${d} - ${milk}L ₹${amt}
+<button onclick='sendWA("${name}",${milk},${amt})'>🟢</button><br>`
 
 }
 
@@ -398,20 +368,33 @@ document.getElementById("ledger").innerHTML=html
 
 }
 
-function sendWA(btn,name,milk,amt){
+function sendWA(name,milk,amt){
 
-btn.classList.add("green")
+let customers=getCustomers()
 
-let text="Milk Bill%0A%0ACustomer:"+name+"%0AMilk:"+milk+"L%0AAmount:₹"+amt
+let phone=""
 
-window.open("https://wa.me/?text="+text)
+customers.forEach(c=>{
+if(c.name==name)phone=c.phone
+})
+
+let msg=`Milk Bill
+
+Customer : ${name}
+
+Milk : ${milk} L
+
+Amount : ₹${amt}`
+
+msg=encodeURIComponent(msg)
+
+window.open(`https://wa.me/91${phone}?text=${msg}`)
 
 }
 
 function generateBill(){
 
 let name=document.getElementById("billCustomer").value
-
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let total=0
@@ -419,23 +402,92 @@ let total=0
 Object.keys(entries).forEach(d=>{
 
 entries[d].forEach(e=>{
+if(e.name==name)total+=e.mqty+e.eqty
+})
 
-if(e.name==name){
-total+=e.mqty+e.eqty
+})
+
+let rate=document.getElementById("rate").value
+let amt=total*rate
+
+document.getElementById("billResult").innerHTML=
+
+`Milk : ${total} L <br> Total Bill : ₹${amt}
+
+<button onclick="sendWA('${name}',${total},${amt})">Send WhatsApp</button>`
+
 }
 
+function generateAll(){
+
+let customers=getCustomers()
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let html=""
+
+customers.forEach(c=>{
+
+let total=0
+
+Object.keys(entries).forEach(d=>{
+
+entries[d].forEach(e=>{
+if(e.name==c.name)total+=e.mqty+e.eqty
 })
 
 })
 
 let rate=90
-
 let amt=total*rate
 
-document.getElementById("billResult").innerHTML=
+html+=`${c.name} ₹${amt}
+<button onclick="sendWA('${c.name}',${total},${amt})">🟢</button><br>`
 
-"Milk : "+total+" L<br>"+
-"Amount : ₹"+amt
+})
+
+document.getElementById("allBills").innerHTML=html
+
+}
+
+function loadPaymentCustomers(){
+
+let customers=getCustomers()
+
+let html=""
+
+customers.forEach(c=>{
+html+=`<option>${c.name}</option>`
+})
+
+document.getElementById("payCustomer").innerHTML=html
+
+}
+
+function savePayment(){
+
+let name=document.getElementById("payCustomer").value
+let recv=document.getElementById("recvAmt").value
+
+alert("Payment Saved")
+
+}
+
+function backup(){
+
+let data={
+customers:getCustomers(),
+entries:JSON.parse(localStorage.getItem("entries")||"{}")
+}
+
+let blob=new Blob([JSON.stringify(data)],{type:"application/json"})
+
+let a=document.createElement("a")
+
+a.href=URL.createObjectURL(blob)
+
+a.download="milk_backup.json"
+
+a.click()
 
 }
 
