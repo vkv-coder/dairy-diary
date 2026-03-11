@@ -1,1 +1,238 @@
 
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Milk Delivery App</title>
+
+<style>
+body{font-family:Arial;margin:0;background:#f4f4f4}
+.header{background:#2e7d32;color:white;padding:15px;text-align:center;font-size:22px}
+.container{padding:10px}
+button{padding:12px;margin:5px;width:100%;font-size:18px;border:none;border-radius:6px;background:#2e7d32;color:white}
+.smallbtn{width:35px;font-size:18px;padding:5px}
+input{padding:10px;width:100%;margin:5px 0;font-size:16px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:6px;border-bottom:1px solid #ddd;background:white}
+.qty{display:flex;align-items:center}
+.qty span{padding:0 10px;font-size:18px;width:40px;text-align:center}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">🥛 Milk Delivery</div>
+
+<div class="container" id="home">
+
+<button onclick="show('entry')">TODAY ENTRY</button>
+<button onclick="show('master')">CUSTOMER MASTER</button>
+<button onclick="backup()">BACKUP DATA</button>
+
+</div>
+
+
+<div class="container" id="master" style="display:none">
+
+<h3>Add Customer</h3>
+
+<input id="name" placeholder="Customer Name">
+<input id="phone" placeholder="Phone">
+
+Morning Qty
+<input id="mqty" type="number" step="0.5" value="1">
+
+Evening Qty
+<input id="eqty" type="number" step="0.5" value="0">
+
+<label>
+<input type="checkbox" id="stop"> Temp Stop Delivery
+</label>
+
+<button onclick="addCustomer()">SAVE CUSTOMER</button>
+<button onclick="show('home')">BACK</button>
+
+<h3>Customer List</h3>
+<div id="custList"></div>
+
+</div>
+
+
+<div class="container" id="entry" style="display:none">
+
+<h3>Daily Entry</h3>
+
+<input id="search" placeholder="Search Customer" onkeyup="loadEntry()">
+
+<div id="entryList"></div>
+
+<button onclick="saveEntry()">SAVE TODAY ENTRY</button>
+<button onclick="show('home')">BACK</button>
+
+</div>
+
+
+<script>
+
+function show(id){
+document.getElementById('home').style.display='none'
+document.getElementById('master').style.display='none'
+document.getElementById('entry').style.display='none'
+document.getElementById(id).style.display='block'
+
+if(id=="master")loadCustomers()
+if(id=="entry")loadEntry()
+}
+
+function getCustomers(){
+return JSON.parse(localStorage.getItem("customers")||"[]")
+}
+
+function saveCustomers(data){
+localStorage.setItem("customers",JSON.stringify(data))
+}
+
+function addCustomer(){
+
+let customers=getCustomers()
+
+customers.push({
+name:document.getElementById("name").value,
+phone:document.getElementById("phone").value,
+mqty:parseFloat(document.getElementById("mqty").value),
+eqty:parseFloat(document.getElementById("eqty").value),
+stop:document.getElementById("stop").checked
+})
+
+saveCustomers(customers)
+
+alert("Customer saved")
+
+document.getElementById("name").value=""
+document.getElementById("phone").value=""
+
+loadCustomers()
+
+}
+
+function loadCustomers(){
+
+let customers=getCustomers()
+
+let html=""
+
+customers.forEach(c=>{
+html+=`<div class=row>
+${c.name} (${c.mqty}/${c.eqty})
+</div>`
+})
+
+document.getElementById("custList").innerHTML=html
+
+}
+
+function loadEntry(){
+
+let customers=getCustomers()
+let search=document.getElementById("search").value.toLowerCase()
+
+let html=""
+
+customers.forEach((c,i)=>{
+
+if(c.stop)return
+
+if(!c.name.toLowerCase().includes(search))return
+
+html+=`
+<div class="row">
+
+<div>${c.name}</div>
+
+<div class="qty">
+<button class="smallbtn" onclick="chg(${i},'m',-0.5)">-</button>
+<span id="m${i}">${c.mqty}</span>
+<button class="smallbtn" onclick="chg(${i},'m',0.5)">+</button>
+</div>
+
+<div class="qty">
+<button class="smallbtn" onclick="chg(${i},'e',-0.5)">-</button>
+<span id="e${i}">${c.eqty}</span>
+<button class="smallbtn" onclick="chg(${i},'e',0.5)">+</button>
+</div>
+
+</div>`
+})
+
+document.getElementById("entryList").innerHTML=html
+
+}
+
+function chg(i,type,val){
+
+let el=document.getElementById(type+i)
+
+let v=parseFloat(el.innerText)+val
+
+if(v<0)v=0
+
+el.innerText=v
+
+}
+
+function saveEntry(){
+
+let customers=getCustomers()
+
+let today=new Date().toISOString().slice(0,10)
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+entries[today]=[]
+
+customers.forEach((c,i)=>{
+
+if(c.stop)return
+
+let m=document.getElementById("m"+i)
+let e=document.getElementById("e"+i)
+
+if(!m)return
+
+entries[today].push({
+name:c.name,
+mqty:parseFloat(m.innerText),
+eqty:parseFloat(e.innerText)
+})
+
+})
+
+localStorage.setItem("entries",JSON.stringify(entries))
+
+alert("Saved")
+
+}
+
+function backup(){
+
+let data={
+customers:getCustomers(),
+entries:JSON.parse(localStorage.getItem("entries")||"{}")
+}
+
+let blob=new Blob([JSON.stringify(data)],{type:"application/json"})
+
+let a=document.createElement("a")
+
+a.href=URL.createObjectURL(blob)
+
+a.download="milk_backup.json"
+
+a.click()
+
+}
+
+</script>
+
+</body>
+</html>
