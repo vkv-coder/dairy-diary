@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Milk Delivery App</title>
+<title>Milk Delivery</title>
 
 <style>
 body{font-family:Arial;margin:0;background:#f4f4f4}
@@ -27,10 +26,22 @@ input{padding:10px;width:100%;margin:5px 0;font-size:16px}
 
 <button onclick="show('entry')">TODAY ENTRY</button>
 <button onclick="show('master')">CUSTOMER MASTER</button>
+<button onclick="show('billing')">BILLING</button>
+<button onclick="show('rate')">SET RATE</button>
 <button onclick="backup()">BACKUP DATA</button>
 
 </div>
 
+<div class="container" id="rate" style="display:none">
+
+<h3>Milk Rate ₹ / Litre</h3>
+
+<input id="rateValue" type="number">
+
+<button onclick="saveRate()">SAVE RATE</button>
+<button onclick="show('home')">BACK</button>
+
+</div>
 
 <div class="container" id="master" style="display:none">
 
@@ -57,12 +68,13 @@ Evening Qty
 
 </div>
 
-
 <div class="container" id="entry" style="display:none">
 
 <h3>Daily Entry</h3>
 
 <input id="search" placeholder="Search Customer" onkeyup="loadEntry()">
+
+<div id="totals"></div>
 
 <div id="entryList"></div>
 
@@ -71,17 +83,37 @@ Evening Qty
 
 </div>
 
+<div class="container" id="billing" style="display:none">
+
+<h3>Billing</h3>
+
+<input id="billName" placeholder="Customer Name">
+
+<input id="fromDate" type="date">
+<input id="toDate" type="date">
+
+<button onclick="generateBill()">GENERATE BILL</button>
+
+<div id="billResult"></div>
+
+<button onclick="show('home')">BACK</button>
+
+</div>
 
 <script>
 
 function show(id){
-document.getElementById('home').style.display='none'
-document.getElementById('master').style.display='none'
-document.getElementById('entry').style.display='none'
+
+['home','master','entry','billing','rate'].forEach(x=>{
+document.getElementById(x).style.display='none'
+})
+
 document.getElementById(id).style.display='block'
 
 if(id=="master")loadCustomers()
 if(id=="entry")loadEntry()
+if(id=="rate")loadRate()
+
 }
 
 function getCustomers(){
@@ -134,15 +166,22 @@ document.getElementById("custList").innerHTML=html
 function loadEntry(){
 
 let customers=getCustomers()
+
 let search=document.getElementById("search").value.toLowerCase()
 
 let html=""
+
+let mt=0
+let et=0
 
 customers.forEach((c,i)=>{
 
 if(c.stop)return
 
 if(!c.name.toLowerCase().includes(search))return
+
+mt+=c.mqty
+et+=c.eqty
 
 html+=`
 <div class="row">
@@ -165,6 +204,9 @@ html+=`
 })
 
 document.getElementById("entryList").innerHTML=html
+
+document.getElementById("totals").innerHTML=
+"Morning Total : "+mt+" L<br>Evening Total : "+et+" L"
 
 }
 
@@ -210,6 +252,78 @@ eqty:parseFloat(e.innerText)
 localStorage.setItem("entries",JSON.stringify(entries))
 
 alert("Saved")
+
+}
+
+function saveRate(){
+
+let r=document.getElementById("rateValue").value
+
+localStorage.setItem("milkRate",r)
+
+alert("Rate saved")
+
+}
+
+function loadRate(){
+
+document.getElementById("rateValue").value=
+localStorage.getItem("milkRate")||70
+
+}
+
+function generateBill(){
+
+let name=document.getElementById("billName").value
+
+let from=document.getElementById("fromDate").value
+let to=document.getElementById("toDate").value
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let total=0
+
+Object.keys(entries).forEach(d=>{
+
+if(d>=from && d<=to){
+
+entries[d].forEach(e=>{
+
+if(e.name==name){
+
+total+=e.mqty+e.eqty
+
+}
+
+})
+
+}
+
+})
+
+let rate=localStorage.getItem("milkRate")||70
+
+let amount=total*rate
+
+document.getElementById("billResult").innerHTML=
+
+"Total Milk : "+total+" L<br>"+
+"Rate : ₹"+rate+"<br>"+
+"Amount : ₹"+amount+"<br><br>"+
+"<button onclick='sendWA(\""+name+"\","+total+","+amount+")'>Send WhatsApp</button>"
+
+}
+
+function sendWA(name,total,amount){
+
+let text=
+
+"Milk Bill%0A%0A"+
+"Customer : "+name+"%0A"+
+"Total Milk : "+total+" L%0A"+
+"Amount : ₹"+amount
+
+window.open("https://wa.me/?text="+text)
 
 }
 
