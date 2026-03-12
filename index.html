@@ -363,11 +363,11 @@ row.dataset.name=c.name
 row.innerHTML="<b>"+c.name+" ("+c.type+")</b>"
 
 let mMinus=btn("-",()=>change(row,"m",-1))
-let mVal=val(c.m)
+let mVal=val(c.m || 0)
 let mPlus=btn("+",()=>change(row,"m",1))
 
 let eMinus=btn("-",()=>change(row,"e",-1))
-let eVal=val(c.e)
+let eVal=val(c.e || 0)
 let ePlus=btn("+",()=>change(row,"e",1))
 
 let cancel=document.createElement("button")
