@@ -7,11 +7,7 @@
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#eef3ff;
-}
+body{font-family:Arial;margin:0;background:#eef3ff}
 
 .header{
 background:#2f6fd1;
@@ -19,19 +15,19 @@ color:white;
 padding:16px;
 text-align:center;
 font-size:22px;
-font-weight:bold;
+font-weight:bold
 }
 
 .container{
-max-width:500px;
+max-width:520px;
 margin:auto;
-padding:15px;
+padding:15px
 }
 
 .menu{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:12px;
+gap:12px
 }
 
 .menu button{
@@ -40,7 +36,7 @@ font-size:18px;
 background:#2f6fd1;
 color:yellow;
 border:none;
-border-radius:10px;
+border-radius:10px
 }
 
 .page{display:none}
@@ -48,51 +44,39 @@ border-radius:10px;
 input,select{
 width:100%;
 padding:10px;
-font-size:18px;
+font-size:17px;
 margin-top:6px;
-margin-bottom:10px;
+margin-bottom:10px
 }
 
 button{
 width:100%;
 padding:12px;
-font-size:18px;
+font-size:17px;
 background:#2f6fd1;
 color:yellow;
 border:none;
-border-radius:10px;
-margin-top:6px;
+border-radius:8px;
+margin-top:6px
 }
 
-.back{
-background:#444;
-color:white;
-}
+.back{background:#444;color:white}
 
 .row{
-display:flex;
-align-items:center;
-justify-content:space-between;
+display:grid;
+grid-template-columns:2fr 1fr 1fr 40px;
+gap:6px;
 background:white;
 padding:8px;
 margin-bottom:6px;
-border-radius:8px;
+border-radius:8px
 }
 
-.qty{
-font-size:20px;
-min-width:25px;
-text-align:center;
-}
-
-.qbtn{
-width:32px;
-height:32px;
-font-size:20px;
+.cancel{
+background:red;
+color:white;
 border:none;
-background:#2f6fd1;
-color:yellow;
-border-radius:6px;
+border-radius:6px
 }
 
 </style>
@@ -105,248 +89,270 @@ border-radius:6px;
 
 <div class="container">
 
-<!-- HOME -->
-
 <div id="home" class="page">
 
 <div class="menu">
 
-<button onclick="showPage('entry')">TODAY ENTRY</button>
-<button onclick="showPage('master')">CUSTOMERS</button>
-<button onclick="showPage('billing')">BILLING</button>
-<button onclick="showPage('payment')">PAYMENT</button>
+<button onclick="show('entry')">TODAY ENTRY</button>
+<button onclick="show('master')">CUSTOMERS</button>
+<button onclick="show('billing')">BILLING</button>
+<button onclick="show('payment')">PAYMENT</button>
+<button onclick="show('settings')">SETTINGS</button>
 
 </div>
 
 </div>
 
-<!-- CUSTOMER MASTER -->
 
 <div id="master" class="page">
 
-<h3>Customer</h3>
+<h3>Customer Master</h3>
 
-<input id="name" placeholder="Name">
-<input id="phone" placeholder="Phone">
+<input id="cname" placeholder="Customer Name">
 
-<select id="type">
+<input id="phone1" placeholder="Phone 1">
+<input id="phone2" placeholder="Phone 2">
+
+<select id="ctype">
 <option value="P">Pickup</option>
 <option value="D">Delivery</option>
 </select>
 
-<input id="mqty" placeholder="Std Morning Qty">
-<input id="eqty" placeholder="Std Evening Qty">
+<input id="stdM" placeholder="Std Morning Qty">
+<input id="stdE" placeholder="Std Evening Qty">
 
-<button onclick="saveCustomer()">SAVE</button>
+<button onclick="saveCustomer()">SAVE CUSTOMER</button>
 
 <div id="custList"></div>
 
-<button class="back" onclick="showPage('home')">BACK</button>
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
-<!-- DAILY ENTRY -->
 
 <div id="entry" class="page">
 
 <h3>Daily Entry</h3>
 
-<input type="date" id="date">
+<input type="date" id="entryDate">
+
+<select id="entryType">
+<option value="D">Delivery</option>
+<option value="P">Pickup</option>
+</select>
+
+<button onclick="loadEntry()">LOAD ENTRY</button>
 
 <div id="entryList"></div>
 
 <button onclick="saveEntry()">SAVE ENTRY</button>
 
-<button class="back" onclick="showPage('home')">BACK</button>
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
-<!-- BILLING -->
 
 <div id="billing" class="page">
 
 <h3>Billing</h3>
 
-<select id="billCust"></select>
+<select id="billCustomer"></select>
 
 <button onclick="generateBill()">GENERATE BILL</button>
 
-<div id="bill"></div>
+<div id="billResult"></div>
 
-<button onclick="sendWA()">Send WhatsApp</button>
+<button onclick="sendWhatsApp()">SEND WHATSAPP</button>
 
-<button class="back" onclick="showPage('home')">BACK</button>
+<button onclick="generateAllBills()">GENERATE ALL BILLS</button>
+
+<button onclick="sendAllWhatsApp()">SEND ALL WHATSAPP</button>
+
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
-<!-- PAYMENT -->
 
 <div id="payment" class="page">
 
 <h3>Payment</h3>
 
-<select id="payCust"></select>
+<select id="payCustomer"></select>
 
 <input id="billAmt" placeholder="Bill Amount">
 
 <input id="recAmt" placeholder="Received Amount">
 
-<button onclick="savePayment()">SAVE</button>
+<button onclick="savePayment()">SAVE PAYMENT</button>
 
-<button class="back" onclick="showPage('home')">BACK</button>
+<button class="back" onclick="show('home')">BACK</button>
+
+</div>
+
+
+<div id="settings" class="page">
+
+<h3>Rates</h3>
+
+<input id="rateP" placeholder="Pickup Rate">
+
+<input id="rateD" placeholder="Delivery Rate">
+
+<button onclick="saveRates()">SAVE RATES</button>
+
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
 </div>
+
 
 <script>
 
-/* PAGE NAVIGATION */
-
-function showPage(p){
+function show(p){
 
 document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 
 document.getElementById(p).style.display="block"
 
-if(p=="master") loadCustomers()
-if(p=="entry") loadEntry()
-if(p=="billing") loadBilling()
-if(p=="payment") loadPayment()
+if(p=="master")loadCustomers()
+if(p=="billing")loadBilling()
+if(p=="payment")loadPayment()
+if(p=="settings")loadRates()
 
 }
 
-showPage("home")
+show("home")
 
-/* CUSTOMER STORAGE */
 
 function getCustomers(){
-return JSON.parse(localStorage.getItem("cust")||"[]")
+return JSON.parse(localStorage.getItem("customers")||"[]")
 }
 
 function saveCustomers(c){
-localStorage.setItem("cust",JSON.stringify(c))
+localStorage.setItem("customers",JSON.stringify(c))
 }
+
 
 function saveCustomer(){
 
 let c=getCustomers()
 
 c.push({
-name:name.value,
-phone:phone.value,
-type:type.value,
-m:parseInt(mqty.value)||0,
-e:parseInt(eqty.value)||0
+name:cname.value,
+p1:phone1.value,
+p2:phone2.value,
+type:ctype.value,
+m:parseFloat(stdM.value)||0,
+e:parseFloat(stdE.value)||0
 })
 
 saveCustomers(c)
 
-name.value=""
-phone.value=""
-mqty.value=""
-eqty.value=""
+cname.value=""
+phone1.value=""
+phone2.value=""
+stdM.value=""
+stdE.value=""
 
 loadCustomers()
 
 }
 
+
 function loadCustomers(){
 
-let list=document.getElementById("custList")
-list.innerHTML=""
-
-getCustomers().forEach((c,i)=>{
-
-let d=document.createElement("div")
-d.className="row"
-d.innerHTML=c.name+" ("+c.type+")"
-
-list.appendChild(d)
-
-})
-
-}
-
-/* DAILY ENTRY */
-
-function loadEntry(){
-
-date.value=new Date().toISOString().split("T")[0]
-
-let list=document.getElementById("entryList")
-list.innerHTML=""
+custList.innerHTML=""
 
 getCustomers().forEach(c=>{
 
-let r=document.createElement("div")
-r.className="row"
-r.dataset.name=c.name
+let d=document.createElement("div")
 
-let m=c.m||0
-let e=c.e||0
+d.className="row"
 
-r.innerHTML="<b>"+c.name+"</b> M "
+d.innerHTML=c.name+" ("+c.type+")"
 
-let mminus=btn("-",()=>chg(r,0,-1))
-let mval=val(m)
-let mplus=btn("+",()=>chg(r,0,1))
-
-let eminus=btn("-",()=>chg(r,1,-1))
-let evalv=val(e)
-let eplus=btn("+",()=>chg(r,1,1))
-
-r.append(mminus,mval,mplus," E ",eminus,evalv,eplus)
-
-list.appendChild(r)
+custList.appendChild(d)
 
 })
 
 }
 
-function btn(t,f){
-let b=document.createElement("button")
-b.className="qbtn"
-b.innerText=t
-b.onclick=f
-return b
+
+function loadEntry(){
+
+entryDate.value=entryDate.value||new Date().toISOString().split("T")[0]
+
+entryList.innerHTML=""
+
+let customers=getCustomers()
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let date=entryDate.value
+
+customers.filter(c=>c.type==entryType.value).forEach(c=>{
+
+let r=document.createElement("div")
+
+r.className="row"
+
+r.dataset.name=c.name
+
+let m=c.m
+let e=c.e
+
+if(entries[date] && entries[date][c.name]){
+
+m=entries[date][c.name].m
+e=entries[date][c.name].e
+
 }
 
-function val(v){
-let s=document.createElement("span")
-s.className="qty"
-s.innerText=parseInt(v)||0
-return s
+let mInput=document.createElement("input")
+mInput.type="number"
+mInput.value=m
+
+let eInput=document.createElement("input")
+eInput.type="number"
+eInput.value=e
+
+let cancel=document.createElement("button")
+cancel.className="cancel"
+cancel.innerText="X"
+cancel.onclick=()=>r.classList.toggle("cancelled")
+
+r.append(c.name,mInput,eInput,cancel)
+
+entryList.appendChild(r)
+
+})
+
 }
-</div>
 
-<script>
-function chg(r,i,d){
-
-let v=r.querySelectorAll(".qty")
-let n=parseInt(v[i].innerText)+d
-if(n<0)n=0
-v[i].innerText=n
-
-}
 
 function saveEntry(){
 
-let d=date.value
-let rows=document.querySelectorAll(".row")
+let date=entryDate.value
+
+let rows=document.querySelectorAll("#entryList .row")
 
 let data=JSON.parse(localStorage.getItem("entries")||"{}")
 
-data[d]={}
+if(!data[date])data[date]={}
 
 rows.forEach(r=>{
 
 let name=r.dataset.name
-let v=r.querySelectorAll(".qty")
 
-data[d][name]={
-m:parseInt(v[0].innerText)||0,
-e:parseInt(v[1].innerText)||0
+let inputs=r.querySelectorAll("input")
+
+data[date][name]={
+
+m:parseFloat(inputs[0].value)||0,
+e:parseFloat(inputs[1].value)||0,
+c:r.classList.contains("cancelled")
+
 }
 
 })
@@ -355,78 +361,174 @@ localStorage.setItem("entries",JSON.stringify(data))
 
 alert("Entry Saved")
 
-showPage("home")
+show("home")
 
 }
 
-/* BILLING */
 
 function loadBilling(){
 
-billCust.innerHTML=""
+billCustomer.innerHTML=""
 
 getCustomers().forEach(c=>{
 
 let o=document.createElement("option")
+
 o.value=c.name
+
 o.textContent=c.name
 
-billCust.appendChild(o)
+billCustomer.appendChild(o)
 
 })
 
 }
 
+
 function generateBill(){
 
-let name=billCust.value
-let entries=JSON.parse(localStorage.getItem("entries")||{})
+let name=billCustomer.value
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let total=0
 
 Object.values(entries).forEach(day=>{
-if(day[name]){
+
+if(day[name] && !day[name].c){
+
 total+=day[name].m+day[name].e
+
 }
+
 })
 
-let amt=total*90
+let c=getCustomers().find(x=>x.name==name)
 
-bill.innerHTML="Milk "+total+" L<br>Total ₹"+amt
+let rate=c.type=="D"?getRateD():getRateP()
 
-localStorage.setItem("lastBill",amt)
+let amt=total*rate
 
-}
+window.bill={name,total,rate,amt}
 
-function sendWA(){
-
-let txt=bill.innerText
-window.open("https://wa.me/?text="+encodeURIComponent(txt))
+billResult.innerHTML="Milk "+total+" L<br>Total ₹"+amt
 
 }
 
-/* PAYMENT */
+
+function sendWhatsApp(){
+
+if(!window.bill)return
+
+let msg=`GOPAL GAUSHALA
+Customer: ${bill.name}
+Milk: ${bill.total} L
+Rate: ₹${bill.rate}
+Total: ₹${bill.amt}`
+
+window.open("https://wa.me/?text="+encodeURIComponent(msg))
+
+}
+
+
+function generateAllBills(){
+
+let out=""
+
+getCustomers().forEach(c=>{
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let total=0
+
+Object.values(entries).forEach(day=>{
+
+if(day[c.name] && !day[c.name].c){
+
+total+=day[c.name].m+day[c.name].e
+
+}
+
+})
+
+let rate=c.type=="D"?getRateD():getRateP()
+
+let amt=total*rate
+
+out+=c.name+" : "+total+"L = ₹"+amt+"<br>"
+
+})
+
+billResult.innerHTML=out
+
+}
+
+
+function sendAllWhatsApp(){
+
+getCustomers().forEach(c=>{
+
+let msg=`Milk bill for ${c.name}`
+
+window.open("https://wa.me/?text="+encodeURIComponent(msg))
+
+})
+
+}
+
 
 function loadPayment(){
 
-payCust.innerHTML=""
+payCustomer.innerHTML=""
 
 getCustomers().forEach(c=>{
 
 let o=document.createElement("option")
+
 o.value=c.name
+
 o.textContent=c.name
 
-payCust.appendChild(o)
+payCustomer.appendChild(o)
 
 })
 
-billAmt.value=localStorage.getItem("lastBill")||""
+}
+
+
+function savePayment(){
+
+alert("Payment Saved")
 
 }
 
-function savePayment(){
-alert("Payment Saved")
+
+function getRateP(){
+return parseFloat(localStorage.getItem("rateP")||90)
+}
+
+function getRateD(){
+return parseFloat(localStorage.getItem("rateD")||100)
+}
+
+
+function loadRates(){
+
+rateP.value=getRateP()
+
+rateD.value=getRateD()
+
+}
+
+
+function saveRates(){
+
+localStorage.setItem("rateP",rateP.value)
+
+localStorage.setItem("rateD",rateD.value)
+
+alert("Rates Saved")
+
 }
 
 </script>
