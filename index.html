@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Gopal Gaushala</title>
 
 <style>
@@ -17,14 +17,13 @@ background:#eef3ff;
 .header{
 background:#2f6fd1;
 color:white;
-padding:18px;
+padding:20px;
 text-align:center;
 font-size:24px;
-font-weight:bold;
 }
 
 .container{
-padding:16px;
+padding:20px;
 max-width:500px;
 margin:auto;
 }
@@ -32,11 +31,11 @@ margin:auto;
 .menu{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:12px;
+gap:10px;
 }
 
-.menu button{
-padding:18px;
+button{
+padding:20px;
 font-size:18px;
 background:#2f6fd1;
 color:yellow;
@@ -48,63 +47,6 @@ border-radius:10px;
 display:none;
 }
 
-input,select{
-width:100%;
-padding:12px;
-font-size:18px;
-margin-top:8px;
-margin-bottom:12px;
-}
-
-button{
-width:100%;
-padding:14px;
-font-size:18px;
-background:#2f6fd1;
-color:yellow;
-border:none;
-border-radius:10px;
-margin-top:10px;
-}
-
-.back{
-background:#555;
-color:white;
-}
-
-.entryCard{
-background:white;
-padding:14px;
-border-radius:10px;
-margin-bottom:12px;
-}
-
-.qty{
-display:flex;
-align-items:center;
-gap:10px;
-margin-bottom:6px;
-}
-
-.qty button{
-width:40px;
-height:40px;
-font-size:20px;
-padding:0;
-}
-
-.cancelled{
-background:#ffd6d6;
-}
-
-.deleteBtn{
-background:red;
-color:white;
-font-size:14px;
-padding:6px;
-margin-top:6px;
-}
-
 </style>
 
 </head>
@@ -114,8 +56,6 @@ margin-top:6px;
 <div class="header">🐄 GOPAL GAUSHALA</div>
 
 <div class="container">
-
-<!-- HOME -->
 
 <div id="home" class="page">
 
@@ -130,78 +70,35 @@ margin-top:6px;
 
 </div>
 
-<!-- CUSTOMER MASTER -->
+<div id="entry" class="page">
+
+<h3>Daily Entry</h3>
+
+<button onclick="show('home')">BACK</button>
+
+</div>
 
 <div id="customer" class="page">
 
 <h3>Customer Master</h3>
 
-<input id="custName" placeholder="Customer Name">
-
-<select id="custType">
-<option value="P">Pickup</option>
-<option value="D">Delivery</option>
-</select>
-
-<button onclick="addCustomer()">SAVE CUSTOMER</button>
-
-<div id="customerList"></div>
-
-<button class="back" onclick="show('home')">BACK</button>
+<button onclick="show('home')">BACK</button>
 
 </div>
-
-<!-- ENTRY -->
-
-<div id="entry" class="page">
-
-<h3>Daily Entry</h3>
-
-<input type="date" id="entryDate">
-
-<div id="entryList"></div>
-
-<button onclick="saveEntry()">SAVE ENTRY</button>
-
-<button class="back" onclick="show('home')">BACK</button>
-
-</div>
-
-<!-- BILLING -->
 
 <div id="billing" class="page">
 
 <h3>Billing</h3>
 
-<select id="billCustomer"></select>
-
-<button onclick="generateBill()">GENERATE BILL</button>
-
-<div id="billResult"></div>
-
-<button onclick="sendWhatsApp()">Send WhatsApp</button>
-
-<button onclick="generateAll()">GENERATE ALL BILLS</button>
-
-<button class="back" onclick="show('home')">BACK</button>
+<button onclick="show('home')">BACK</button>
 
 </div>
-
-<!-- PAYMENT -->
 
 <div id="payment" class="page">
 
 <h3>Payment</h3>
 
-<select id="payCustomer"></select>
-
-<input id="billAmt" placeholder="Bill Amount">
-
-<input id="recAmt" placeholder="Received Amount">
-
-<button onclick="savePayment()">SAVE PAYMENT</button>
-
-<button class="back" onclick="show('home')">BACK</button>
+<button onclick="show('home')">BACK</button>
 
 </div>
 
@@ -209,302 +106,17 @@ margin-top:6px;
 
 <script>
 
-let ratePickup = 90
-let rateDelivery = 100
-
 function show(p){
 
-document.querySelectorAll(".page").forEach(x=>x.style.display="none")
+document.querySelectorAll(".page").forEach(function(x){
+x.style.display="none"
+})
 
 document.getElementById(p).style.display="block"
-
-if(p=="customer") loadCustomers()
-if(p=="entry") loadEntry()
-if(p=="billing") loadBilling()
 
 }
 
 show("home")
-
-function getCustomers(){
-return JSON.parse(localStorage.getItem("customers")||"[]")
-}
-
-function saveCustomers(c){
-localStorage.setItem("customers",JSON.stringify(c))
-}
-
-function addCustomer(){
-
-let name=document.getElementById("custName").value.trim()
-let type=document.getElementById("custType").value
-
-if(!name) return
-
-let c=getCustomers()
-
-if(c.find(x=>x.name==name)){
-alert("Customer already exists")
-return
-}
-
-c.push({name:name,type:type})
-
-saveCustomers(c)
-
-document.getElementById("custName").value=""
-
-loadCustomers()
-
-}
-
-function deleteCustomer(n){
-
-let c=getCustomers().filter(x=>x.name!=n)
-
-saveCustomers(c)
-
-loadCustomers()
-
-}
-
-function loadCustomers(){
-
-let list=document.getElementById("customerList")
-
-list.innerHTML=""
-
-getCustomers().forEach(c=>{
-
-let d=document.createElement("div")
-
-d.className="entryCard"
-
-d.innerHTML=c.name+" ("+c.type+")"
-
-let del=document.createElement("button")
-
-del.innerText="Delete"
-
-del.className="deleteBtn"
-
-del.onclick=()=>deleteCustomer(c.name)
-
-d.appendChild(del)
-
-list.appendChild(d)
-
-})
-
-}
-
-function loadEntry(){
-
-let list=document.getElementById("entryList")
-
-list.innerHTML=""
-
-let cust=getCustomers()
-
-cust.forEach(c=>{
-
-let card=document.createElement("div")
-
-card.className="entryCard"
-
-card.dataset.name=c.name
-
-card.innerHTML="<b>"+c.name+" ("+c.type+")</b>"
-
-let m=qtyRow("Morning")
-let e=qtyRow("Evening")
-
-card.appendChild(m)
-card.appendChild(e)
-
-let cancel=document.createElement("button")
-
-cancel.innerText="Cancel Today"
-
-cancel.onclick=()=>card.classList.toggle("cancelled")
-
-card.appendChild(cancel)
-
-list.appendChild(card)
-
-})
-
-}
-
-function qtyRow(t){
-
-let d=document.createElement("div")
-
-d.className="qty"
-
-let label=document.createElement("span")
-label.innerText=t
-
-let minus=document.createElement("button")
-minus.innerText="-"
-
-let val=document.createElement("span")
-val.innerText="0"
-
-let plus=document.createElement("button")
-plus.innerText="+"
-
-minus.onclick=()=>val.innerText=Math.max(0,parseInt(val.innerText)-1)
-plus.onclick=()=>val.innerText=parseInt(val.innerText)+1
-
-d.appendChild(label)
-d.appendChild(minus)
-d.appendChild(val)
-d.appendChild(plus)
-
-return d
-
-}
-
-function saveEntry(){
-
-let date=document.getElementById("entryDate").value
-
-if(!date){
-alert("Select date")
-return
-}
-
-let rows=document.querySelectorAll("#entryList .entryCard")
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-if(!entries[date]) entries[date]={}
-
-rows.forEach(r=>{
-
-let name=r.dataset.name
-
-let nums=r.querySelectorAll(".qty span:nth-child(3)")
-
-let m=parseInt(nums[0].innerText)
-let e=parseInt(nums[1].innerText)
-
-let cancel=r.classList.contains("cancelled")
-
-entries[date][name]={morning:m,evening:e,cancel:cancel}
-
-})
-
-localStorage.setItem("entries",JSON.stringify(entries))
-
-alert("Entry Saved")
-
-}
-
-function loadBilling(){
-
-let s=document.getElementById("billCustomer")
-
-s.innerHTML=""
-
-getCustomers().forEach(c=>{
-
-let o=document.createElement("option")
-
-o.value=c.name
-
-o.textContent=c.name
-
-s.appendChild(o)
-
-})
-
-}
-
-function generateBill(){
-
-let name=document.getElementById("billCustomer").value
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let total=0
-
-Object.values(entries).forEach(day=>{
-
-if(day[name] && !day[name].cancel){
-
-total+=day[name].morning+day[name].evening
-
-}
-
-})
-
-let cust=getCustomers().find(c=>c.name==name)
-
-let rate=cust.type=="D"?rateDelivery:ratePickup
-
-let amt=total*rate
-
-window.bill={name,total,rate,amt}
-
-document.getElementById("billResult").innerHTML=
-"Milk: "+total+" L<br>Rate: ₹"+rate+"<br>Total: ₹"+amt
-
-}
-
-function sendWhatsApp(){
-
-let b=window.bill
-
-if(!b) return
-
-let msg=`GOPAL GAUSHALA
-
-Customer: ${b.name}
-
-Milk: ${b.total} L
-Rate: ₹${b.rate}
-
-Total: ₹${b.amt}`
-
-window.open("https://wa.me/?text="+encodeURIComponent(msg))
-
-}
-
-function generateAll(){
-
-let out=""
-
-getCustomers().forEach(c=>{
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let total=0
-
-Object.values(entries).forEach(day=>{
-if(day[c.name] && !day[c.name].cancel){
-total+=day[c.name].morning+day[c.name].evening
-}
-})
-
-let rate=c.type=="D"?rateDelivery:ratePickup
-
-let amt=total*rate
-
-out+=c.name+" : "+total+"L = ₹"+amt+"<br>"
-
-})
-
-document.getElementById("billResult").innerHTML=out
-
-}
-
-function savePayment(){
-
-alert("Payment saved (ledger next version)")
-
-}
 
 </script>
 
