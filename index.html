@@ -972,10 +972,15 @@ getCustomers().forEach(c=>{
 let o=document.createElement("option")
 o.value=c.name
 o.textContent=c.name
-
 payCustomer.appendChild(o)
 
 })
+
+let lastAmt=localStorage.getItem("lastBillAmount")
+
+if(lastAmt){
+document.getElementById("billAmt").value=lastAmt
+}
 
 }
 
