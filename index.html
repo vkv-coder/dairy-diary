@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Gopal Gaushala</title>
 
 <style>
@@ -10,20 +12,21 @@ body{
 font-family:Arial;
 margin:0;
 background:#eef3ff;
-font-size:18px;
 }
 
 .header{
 background:#2f6fd1;
 color:white;
-text-align:center;
 padding:18px;
-font-size:26px;
+text-align:center;
+font-size:24px;
 font-weight:bold;
 }
 
 .container{
-padding:12px;
+padding:16px;
+max-width:500px;
+margin:auto;
 }
 
 .menu{
@@ -32,66 +35,78 @@ grid-template-columns:1fr 1fr;
 gap:12px;
 }
 
-.box{
-background:#2f6fd1;
-color:yellow;
-padding:20px;
-text-align:center;
-border-radius:8px;
-font-size:20px;
-}
-
-button{
+.menu button{
+padding:18px;
+font-size:18px;
 background:#2f6fd1;
 color:yellow;
 border:none;
-padding:12px;
-font-size:18px;
-border-radius:8px;
-margin-top:8px;
-width:100%;
+border-radius:10px;
 }
 
-.backbtn{
-background:#444;
+.page{
+display:none;
+}
+
+input,select{
+width:100%;
+padding:12px;
+font-size:18px;
+margin-top:8px;
+margin-bottom:12px;
+}
+
+button{
+width:100%;
+padding:14px;
+font-size:18px;
+background:#2f6fd1;
+color:yellow;
+border:none;
+border-radius:10px;
+margin-top:10px;
+}
+
+.back{
+background:#555;
 color:white;
 }
 
-.row{
+.entryCard{
 background:white;
-padding:10px;
-border-radius:8px;
-margin-bottom:8px;
+padding:14px;
+border-radius:10px;
+margin-bottom:12px;
 }
 
-.smallbtn{
-width:auto;
-padding:6px 10px;
-font-size:14px;
+.qty{
+display:flex;
+align-items:center;
+gap:10px;
+margin-bottom:6px;
 }
 
-.qtybtn{
-width:34px;
-height:34px;
-font-size:18px;
+.qty button{
+width:40px;
+height:40px;
+font-size:20px;
+padding:0;
 }
 
 .cancelled{
 background:#ffd6d6;
 }
 
-.hidden{
-display:none;
-}
-
-input,select{
-width:100%;
-padding:10px;
-font-size:16px;
-margin-bottom:8px;
+.deleteBtn{
+background:red;
+color:white;
+font-size:14px;
+padding:6px;
+margin-top:6px;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -102,51 +117,43 @@ margin-bottom:8px;
 
 <!-- HOME -->
 
-<div id="home">
+<div id="home" class="page">
 
 <div class="menu">
 
-<div class="box" onclick="show('entry')">TODAY ENTRY</div>
-<div class="box" onclick="show('master')">CUSTOMER MASTER</div>
-<div class="box" onclick="show('billing')">BILLING</div>
-<div class="box" onclick="show('payments')">PAYMENTS</div>
-<div class="box" onclick="show('settings')">SETTINGS</div>
-<div class="box" onclick="backup()">BACKUP</div>
+<button onclick="show('entry')">TODAY ENTRY</button>
+<button onclick="show('customer')">CUSTOMER MASTER</button>
+<button onclick="show('billing')">BILLING</button>
+<button onclick="show('payment')">PAYMENTS</button>
 
 </div>
 
 </div>
-
 
 <!-- CUSTOMER MASTER -->
 
-<div id="master" class="hidden">
+<div id="customer" class="page">
 
-<h3>Add Customer</h3>
+<h3>Customer Master</h3>
 
-<input id="custName" placeholder="Name">
-
-<input id="custPhone" placeholder="Phone">
+<input id="custName" placeholder="Customer Name">
 
 <select id="custType">
 <option value="P">Pickup</option>
 <option value="D">Delivery</option>
 </select>
 
-<input id="custMorning" type="number" step="0.5" placeholder="Std Morning">
+<button onclick="addCustomer()">SAVE CUSTOMER</button>
 
-<input id="custEvening" type="number" step="0.5" placeholder="Std Evening">
+<div id="customerList"></div>
 
-<button onclick="saveCustomer()">SAVE</button>
-
-<button class="backbtn" onclick="show('home')">BACK</button>
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
-
 <!-- ENTRY -->
 
-<div id="entry" class="hidden">
+<div id="entry" class="page">
 
 <h3>Daily Entry</h3>
 
@@ -154,17 +161,15 @@ margin-bottom:8px;
 
 <div id="entryList"></div>
 
-<button onclick="addExtra()">+ ADD CUSTOMER FOR TODAY</button>
-
 <button onclick="saveEntry()">SAVE ENTRY</button>
 
-<button class="backbtn" onclick="show('home')">BACK</button>
-</div>
+<button class="back" onclick="show('home')">BACK</button>
 
+</div>
 
 <!-- BILLING -->
 
-<div id="billing" class="hidden">
+<div id="billing" class="page">
 
 <h3>Billing</h3>
 
@@ -174,335 +179,330 @@ margin-bottom:8px;
 
 <div id="billResult"></div>
 
-<button class="backbtn" onclick="show('home')">BACK</button>
+<button onclick="sendWhatsApp()">Send WhatsApp</button>
+
+<button onclick="generateAll()">GENERATE ALL BILLS</button>
+
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
+<!-- PAYMENT -->
 
-<!-- PAYMENTS -->
+<div id="payment" class="page">
 
-<div id="payments" class="hidden">
-
-<h3>Payments</h3>
+<h3>Payment</h3>
 
 <select id="payCustomer"></select>
 
-<input placeholder="Bill Amount">
+<input id="billAmt" placeholder="Bill Amount">
 
-<input placeholder="Received Amount">
+<input id="recAmt" placeholder="Received Amount">
 
-<button>SAVE PAYMENT</button>
+<button onclick="savePayment()">SAVE PAYMENT</button>
 
-<button class="backbtn" onclick="show('home')">BACK</button>
-
-</div>
-
-
-<!-- SETTINGS -->
-
-<div id="settings" class="hidden">
-
-<h3>Rates</h3>
-
-Pickup Rate
-
-<input id="pickupRate">
-
-Delivery Rate
-
-<input id="deliveryRate">
-
-<button onclick="saveRates()">SAVE</button>
-
-<button class="backbtn" onclick="show('home')">BACK</button>
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
 </div>
-
 
 <script>
 
-/* navigation */
+let ratePickup = 90
+let rateDelivery = 100
 
-function show(id){
+function show(p){
 
-let pages=["home","master","entry","billing","payments","settings"]
+document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 
-pages.forEach(p=>{
-document.getElementById(p).classList.add("hidden")
-})
+document.getElementById(p).style.display="block"
 
-document.getElementById(id).classList.remove("hidden")
-
-if(id=="entry") loadEntry()
-
-if(id=="billing"||id=="payments") loadCustomers()
-
-if(id=="settings") loadRates()
+if(p=="customer") loadCustomers()
+if(p=="entry") loadEntry()
+if(p=="billing") loadBilling()
 
 }
 
+show("home")
 
-/* customer master */
+function getCustomers(){
+return JSON.parse(localStorage.getItem("customers")||"[]")
+}
 
-function saveCustomer(){
+function saveCustomers(c){
+localStorage.setItem("customers",JSON.stringify(c))
+}
 
-let customers=JSON.parse(localStorage.getItem("customers")||"[]")
+function addCustomer(){
 
-customers.push({
-name:custName.value,
-phone:custPhone.value,
-type:custType.value,
-morning:custMorning.value,
-evening:custEvening.value
-})
+let name=document.getElementById("custName").value.trim()
+let type=document.getElementById("custType").value
 
-localStorage.setItem("customers",JSON.stringify(customers))
+if(!name) return
 
-custName.value=""
-custPhone.value=""
-custMorning.value=""
-custEvening.value=""
+let c=getCustomers()
 
-alert("Saved")
+if(c.find(x=>x.name==name)){
+alert("Customer already exists")
+return
+}
+
+c.push({name:name,type:type})
+
+saveCustomers(c)
+
+document.getElementById("custName").value=""
+
+loadCustomers()
 
 }
 
+function deleteCustomer(n){
 
-/* load customers */
+let c=getCustomers().filter(x=>x.name!=n)
+
+saveCustomers(c)
+
+loadCustomers()
+
+}
 
 function loadCustomers(){
 
-let customers=JSON.parse(localStorage.getItem("customers")||"[]")
+let list=document.getElementById("customerList")
 
-let html=""
+list.innerHTML=""
 
-customers.forEach(c=>{
-html+=`<option>${c.name}</option>`
+getCustomers().forEach(c=>{
+
+let d=document.createElement("div")
+
+d.className="entryCard"
+
+d.innerHTML=c.name+" ("+c.type+")"
+
+let del=document.createElement("button")
+
+del.innerText="Delete"
+
+del.className="deleteBtn"
+
+del.onclick=()=>deleteCustomer(c.name)
+
+d.appendChild(del)
+
+list.appendChild(d)
+
 })
 
-billCustomer.innerHTML=html
-payCustomer.innerHTML=html
-
 }
-
-
-/* entry */
 
 function loadEntry(){
 
-entryDate.value=new Date().toISOString().slice(0,10)
+let list=document.getElementById("entryList")
 
-let customers=JSON.parse(localStorage.getItem("customers")||"[]")
+list.innerHTML=""
 
-entryList.innerHTML=""
+let cust=getCustomers()
 
-customers.forEach((c,i)=>{
+cust.forEach(c=>{
 
-entryList.innerHTML+=`
+let card=document.createElement("div")
 
-<div class="row" id="row${i}">
+card.className="entryCard"
 
-<b>${c.name} (${c.type})</b>
+card.dataset.name=c.name
 
-<button class="smallbtn" onclick="cancel(${i})">Cancel</button>
+card.innerHTML="<b>"+c.name+" ("+c.type+")</b>"
 
-<br>
+let m=qtyRow("Morning")
+let e=qtyRow("Evening")
 
-M 
-<button class="qtybtn" onclick="chg(${i},'m',-1)">-</button>
-<span id="m${i}">${c.morning}</span>
-<button class="qtybtn" onclick="chg(${i},'m',1)">+</button>
+card.appendChild(m)
+card.appendChild(e)
 
-&nbsp;&nbsp;
+let cancel=document.createElement("button")
 
-E 
-<button class="qtybtn" onclick="chg(${i},'e',-1)">-</button>
-<span id="e${i}">${c.evening}</span>
-<button class="qtybtn" onclick="chg(${i},'e',1)">+</button>
+cancel.innerText="Cancel Today"
 
-</div>
+cancel.onclick=()=>card.classList.toggle("cancelled")
 
-`
+card.appendChild(cancel)
+
+list.appendChild(card)
 
 })
 
 }
 
+function qtyRow(t){
 
-function chg(i,t,v){
+let d=document.createElement("div")
 
-let el=document.getElementById(t+i)
+d.className="qty"
 
-let val=parseFloat(el.innerText)+v
+let label=document.createElement("span")
+label.innerText=t
 
-if(val<0) val=0
+let minus=document.createElement("button")
+minus.innerText="-"
 
-el.innerText=val
+let val=document.createElement("span")
+val.innerText="0"
 
-}
+let plus=document.createElement("button")
+plus.innerText="+"
 
+minus.onclick=()=>val.innerText=Math.max(0,parseInt(val.innerText)-1)
+plus.onclick=()=>val.innerText=parseInt(val.innerText)+1
 
-function cancel(i){
+d.appendChild(label)
+d.appendChild(minus)
+d.appendChild(val)
+d.appendChild(plus)
 
-let r=document.getElementById("row"+i)
-
-if(r.classList.contains("cancelled")){
-r.classList.remove("cancelled")
-}else{
-r.classList.add("cancelled")
-}
-
-}
-
-
-/* extra customer */
-
-function addExtra(){
-
-let name=prompt("Customer name")
-
-let qty=prompt("Milk qty")
-
-entryList.innerHTML+=`
-
-<div class="row">
-
-<b>${name} (extra)</b>
-
-<br>
-
-Qty ${qty}
-
-</div>
-
-`
+return d
 
 }
-
-
-/* save entry */
 
 function saveEntry(){
 
-let date = document.getElementById("entryDate").value
+let date=document.getElementById("entryDate").value
 
-let entries = JSON.parse(localStorage.getItem("entries") || "{}")
-
-if(!entries[date]) entries[date] = {}
-
-document.querySelectorAll(".entryRow").forEach(r=>{
-
-let name = r.dataset.name
-
-let morning = parseFloat(r.querySelector(".morningQty").innerText) || 0
-let evening = parseFloat(r.querySelector(".eveningQty").innerText) || 0
-
-let cancelled = r.classList.contains("cancelled")
-
-entries[date][name] = {
-morning:morning,
-evening:evening,
-cancel:cancelled
+if(!date){
+alert("Select date")
+return
 }
+
+let rows=document.querySelectorAll("#entryList .entryCard")
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+if(!entries[date]) entries[date]={}
+
+rows.forEach(r=>{
+
+let name=r.dataset.name
+
+let nums=r.querySelectorAll(".qty span:nth-child(3)")
+
+let m=parseInt(nums[0].innerText)
+let e=parseInt(nums[1].innerText)
+
+let cancel=r.classList.contains("cancelled")
+
+entries[date][name]={morning:m,evening:e,cancel:cancel}
 
 })
 
 localStorage.setItem("entries",JSON.stringify(entries))
 
-alert("Entry saved")
+alert("Entry Saved")
+
+}
+
+function loadBilling(){
+
+let s=document.getElementById("billCustomer")
+
+s.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let o=document.createElement("option")
+
+o.value=c.name
+
+o.textContent=c.name
+
+s.appendChild(o)
+
+})
 
 }
 
 function generateBill(){
 
-let name = document.getElementById("billCustomer").value
+let name=document.getElementById("billCustomer").value
 
-let entries = JSON.parse(localStorage.getItem("entries") || "[]")
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
-let rateP = parseFloat(localStorage.getItem("rateP") || 90)
-let rateD = parseFloat(localStorage.getItem("rateD") || 100)
+let total=0
 
-let customers = JSON.parse(localStorage.getItem("customers") || "[]")
+Object.values(entries).forEach(day=>{
 
-let cust = customers.find(c=>c.name===name)
+if(day[name] && !day[name].cancel){
 
-let rate = cust.type==="D" ? rateD : rateP
+total+=day[name].morning+day[name].evening
 
-let totalMilk = 0
+}
 
-entries.forEach(e=>{
- if(e.name===name && !e.cancelled){
-   totalMilk += (e.morning + e.evening)
- }
 })
 
-let amount = totalMilk * rate
+let cust=getCustomers().find(c=>c.name==name)
 
-document.getElementById("billResult").innerHTML =
-`
-Milk : ${totalMilk} L<br><br>
-Rate : ₹${rate}<br><br>
-Total : ₹${amount}
-`
+let rate=cust.type=="D"?rateDelivery:ratePickup
 
-window.currentBill = {
-name:name,
-milk:totalMilk,
-rate:rate,
-amount:amount
-}
+let amt=total*rate
 
-function sendWA(msg){
+window.bill={name,total,rate,amt}
 
-let url="https://wa.me/?text="+encodeURIComponent(msg)
-
-window.open(url)
+document.getElementById("billResult").innerHTML=
+"Milk: "+total+" L<br>Rate: ₹"+rate+"<br>Total: ₹"+amt
 
 }
 
+function sendWhatsApp(){
 
-/* settings */
+let b=window.bill
 
-function saveRates(){
+if(!b) return
 
-let r={
-pickup:pickupRate.value,
-delivery:deliveryRate.value
-}
+let msg=`GOPAL GAUSHALA
 
-localStorage.setItem("rates",JSON.stringify(r))
+Customer: ${b.name}
 
-alert("Saved")
+Milk: ${b.total} L
+Rate: ₹${b.rate}
 
-}
+Total: ₹${b.amt}`
 
-function loadRates(){
-
-let r=JSON.parse(localStorage.getItem("rates")||"{}")
-
-pickupRate.value=r.pickup||90
-deliveryRate.value=r.delivery||100
+window.open("https://wa.me/?text="+encodeURIComponent(msg))
 
 }
 
+function generateAll(){
 
-/* backup */
+let out=""
 
-function backup(){
+getCustomers().forEach(c=>{
 
-let data=localStorage
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
-let blob=new Blob([JSON.stringify(data)])
+let total=0
 
-let a=document.createElement("a")
+Object.values(entries).forEach(day=>{
+if(day[c.name] && !day[c.name].cancel){
+total+=day[c.name].morning+day[c.name].evening
+}
+})
 
-a.href=URL.createObjectURL(blob)
+let rate=c.type=="D"?rateDelivery:ratePickup
 
-a.download="gaushala_backup.json"
+let amt=total*rate
 
-a.click()
+out+=c.name+" : "+total+"L = ₹"+amt+"<br>"
+
+})
+
+document.getElementById("billResult").innerHTML=out
+
+}
+
+function savePayment(){
+
+alert("Payment saved (ledger next version)")
 
 }
 
