@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dairy Milk</title>
+<title>Gopal Gaushala</title>
 
 <style>
 
@@ -19,50 +18,291 @@ background:#2f6fd1;
 color:white;
 text-align:center;
 padding:20px;
-font-size:26px;
+font-size:28px;
+font-weight:bold;
 }
 
 .container{
-padding:20px;
+padding:16px;
+width:100%;
 }
 
 .menu{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:15px;
+gap:16px;
 }
 
 .box{
 background:#2f6fd1;
 color:yellow;
-padding:25px;
+padding:26px;
 text-align:center;
 border-radius:12px;
 font-size:22px;
 }
 
-</style>
+button{
+background:#2f6fd1;
+color:yellow;
+border:none;
+padding:18px;
+font-size:22px;
+border-radius:10px;
+margin-top:10px;
+width:100%;
+}
 
+.backbtn{
+background:#444;
+color:white;
+}
+
+input,select{
+width:100%;
+padding:16px;
+font-size:22px;
+margin-top:6px;
+margin-bottom:14px;
+}
+
+.hidden{
+display:none;
+}
+
+.card{
+background:white;
+padding:18px;
+border-radius:12px;
+margin-bottom:14px;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="header">🥛 Dairy Milk</div>
+<div class="header">🐄 GOPAL GAUSHALA</div>
 
 <div class="container">
 
+<!-- HOME -->
+
+<div id="home">
+
 <div class="menu">
 
-<div class="box">TODAY ENTRY</div>
-<div class="box">CUSTOMER MASTER</div>
-<div class="box">BILLING</div>
-<div class="box">PAYMENTS</div>
-<div class="box">BACKUP</div>
+<div class="box" onclick="show('entry')">TODAY ENTRY</div>
+<div class="box" onclick="show('master')">CUSTOMER MASTER</div>
+<div class="box" onclick="show('billing')">BILLING</div>
+<div class="box" onclick="show('payments')">PAYMENTS</div>
+<div class="box" onclick="show('settings')">SETTINGS</div>
+<div class="box" onclick="backup()">BACKUP</div>
 
 </div>
 
 </div>
+
+
+<!-- CUSTOMER MASTER -->
+
+<div id="master" class="hidden">
+
+<h2>Add Customer</h2>
+
+Name
+<input id="custName">
+
+Phone
+<input id="custPhone">
+
+Type
+<select id="custType">
+<option value="P">Pickup</option>
+<option value="D">Delivery</option>
+</select>
+
+Morning Qty
+<input id="custMorning" type="number" step="0.5">
+
+Evening Qty
+<input id="custEvening" type="number" step="0.5">
+
+<button onclick="saveCustomer()">SAVE CUSTOMER</button>
+
+<button class="backbtn" onclick="show('home')">BACK</button>
+
+</div>
+
+
+<!-- ENTRY -->
+
+<div id="entry" class="hidden">
+
+<h2>Daily Entry</h2>
+
+<input type="date" id="entryDate">
+
+<div id="entryList"></div>
+
+<button>SAVE ENTRY</button>
+
+<button class="backbtn" onclick="show('home')">BACK</button>
+
+</div>
+
+
+<!-- BILLING -->
+
+<div id="billing" class="hidden">
+
+<h2>Billing</h2>
+
+<select id="billCustomer"></select>
+
+Rate
+<input id="billRate">
+
+<button>VIEW LEDGER</button>
+
+<button>GENERATE TOTAL BILL</button>
+
+<button class="backbtn" onclick="show('home')">BACK</button>
+
+</div>
+
+
+<!-- PAYMENTS -->
+
+<div id="payments" class="hidden">
+
+<h2>Payments</h2>
+
+Customer
+<select id="payCustomer"></select>
+
+Bill Amount
+<input>
+
+Received Amount
+<input>
+
+<button>SAVE PAYMENT</button>
+
+<button class="backbtn" onclick="show('home')">BACK</button>
+
+</div>
+
+
+<!-- SETTINGS -->
+
+<div id="settings" class="hidden">
+
+<h2>Rate Settings</h2>
+
+Pickup Rate (P)
+<input id="pickupRate">
+
+Delivery Rate (D)
+<input id="deliveryRate">
+
+<button onclick="saveRates()">SAVE SETTINGS</button>
+
+<button class="backbtn" onclick="show('home')">BACK</button>
+
+</div>
+
+
+</div>
+
+
+<script>
+
+/* navigation */
+
+function show(id){
+
+let pages=["home","master","entry","billing","payments","settings"]
+
+pages.forEach(p=>{
+document.getElementById(p).classList.add("hidden")
+})
+
+document.getElementById(id).classList.remove("hidden")
+
+if(id=="settings"){loadRates()}
+
+}
+
+
+/* customer save */
+
+function saveCustomer(){
+
+let customers=JSON.parse(localStorage.getItem("customers")||"[]")
+
+customers.push({
+name:document.getElementById("custName").value,
+phone:document.getElementById("custPhone").value,
+type:document.getElementById("custType").value,
+morning:document.getElementById("custMorning").value,
+evening:document.getElementById("custEvening").value
+})
+
+localStorage.setItem("customers",JSON.stringify(customers))
+
+alert("Customer saved")
+
+}
+
+
+/* rate settings */
+
+function saveRates(){
+
+let rates={
+pickup:document.getElementById("pickupRate").value,
+delivery:document.getElementById("deliveryRate").value
+}
+
+localStorage.setItem("rates",JSON.stringify(rates))
+
+alert("Rates saved")
+
+}
+
+function loadRates(){
+
+let rates=JSON.parse(localStorage.getItem("rates")||"{}")
+
+document.getElementById("pickupRate").value=rates.pickup||90
+document.getElementById("deliveryRate").value=rates.delivery||100
+
+}
+
+
+/* backup */
+
+function backup(){
+
+let data={
+customers:localStorage.getItem("customers"),
+rates:localStorage.getItem("rates")
+}
+
+let blob=new Blob([JSON.stringify(data)],{type:"application/json"})
+
+let a=document.createElement("a")
+
+a.href=URL.createObjectURL(blob)
+
+a.download="gopal_gaushala_backup.json"
+
+a.click()
+
+}
+
+</script>
 
 </body>
-
 </html>
