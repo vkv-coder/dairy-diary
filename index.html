@@ -1,3 +1,14 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Dairy Milk</title>
+
+<style>
+
 body{
 font-family:Arial;
 margin:0;
@@ -15,7 +26,6 @@ font-size:26px;
 
 .container{
 padding:16px;
-width:100%;
 }
 
 .dashboard{
@@ -71,7 +81,6 @@ background:white;
 padding:16px;
 border-radius:10px;
 margin-bottom:16px;
-font-size:22px;
 }
 
 .green{
@@ -82,7 +91,79 @@ color:white!important;
 .backbtn{
 background:#555;
 color:white;
-width:100%;
 margin-top:30px;
-font-size:22px;
 }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">🥛 Dairy Milk</div>
+
+<div class="container" id="home">
+
+<div class="dashboard" id="totals">
+Morning : 0 L<br>
+Evening : 0 L<br>
+Total Milk : 0 L<br>
+Amount : ₹0
+</div>
+
+<div class="menu">
+
+<div class="box">TODAY ENTRY</div>
+<div class="box">CUSTOMER MASTER</div>
+<div class="box">BILLING</div>
+<div class="box">PAYMENTS</div>
+<div class="box">BACKUP</div>
+
+</div>
+
+</div>
+
+<div class="container" id="entry" style="display:none">
+
+<h3>Entry Date</h3>
+<input type="date">
+
+<div class="row">
+
+<b>Customer : Example</b>
+
+<br><br>
+
+Morning
+
+<br>
+
+<button class="qtybtn">-</button>
+1.5
+<button class="qtybtn">+</button>
+
+<button>PAID</button>
+
+<br><br>
+
+Evening
+
+<br>
+
+<button class="qtybtn">-</button>
+0.5
+<button class="qtybtn">+</button>
+
+<button>PAID</button>
+
+</div>
+
+<button>SAVE ENTRY</button>
+
+<button class="backbtn">BACK</button>
+
+</div>
+
+</body>
+
+</html>
