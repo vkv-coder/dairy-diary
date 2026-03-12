@@ -283,7 +283,15 @@ function loadEntry(){
 
 entryDate.value=entryDate.value||new Date().toISOString().split("T")[0]
 
-entryList.innerHTML=""
+entryList.innerHTML = `
+<div style="display:grid;grid-template-columns:2fr 1fr 1fr 40px;
+font-weight:bold;margin-bottom:6px">
+<div>Customer</div>
+<div>Morning</div>
+<div>Evening</div>
+<div></div>
+</div>
+`
 
 let customers=getCustomers()
 
