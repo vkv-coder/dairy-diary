@@ -279,24 +279,22 @@ loadCustomers()
 
 }
 
-function loadCustomers(){
+function loadCustomerBill(){
 
-custList.innerHTML=""
+let name = payCustomer.value
 
-getCustomers().forEach(c=>{
+let bill = JSON.parse(localStorage.getItem("lastBill_"+name)||"{}")
 
-let d=document.createElement("div")
-
-d.className="row"
-
-d.innerHTML=c.name+" ("+c.type+")"
-
-custList.appendChild(d)
-
-})
-
+if(!bill.amt){
+billInfo.innerHTML="No Bill Generated"
+return
 }
 
+billInfo.innerHTML =
+"Bill Period : "+bill.from+" → "+bill.to+
+"<br>Bill Amount : ₹"+bill.amt
+
+}
 function loadEntry(){
 
 entryDate.value=entryDate.value||new Date().toISOString().split("T")[0]
