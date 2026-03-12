@@ -295,57 +295,6 @@ billInfo.innerHTML =
 "<br>Bill Amount : ₹"+bill.amt
 
 }
-function loadEntry(){
-
-entryDate.value=entryDate.value||new Date().toISOString().split("T")[0]
-
-entryList.innerHTML=""
-
-let customers=getCustomers()
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let date=entryDate.value
-
-customers.filter(c=>c.type==entryType.value).forEach(c=>{
-
-let r=document.createElement("div")
-
-r.className="row"
-
-r.dataset.name=c.name
-
-let m=c.m
-let e=c.e
-
-if(entries[date] && entries[date][c.name]){
-
-m=entries[date][c.name].m
-e=entries[date][c.name].e
-
-}
-
-let mInput=document.createElement("input")
-mInput.type="number"
-mInput.value=m
-
-let eInput=document.createElement("input")
-eInput.type="number"
-eInput.value=e
-
-let cancel=document.createElement("button")
-cancel.className="cancel"
-cancel.innerText="X"
-cancel.onclick=()=>r.classList.toggle("cancelled")
-
-r.append(c.name,mInput,eInput,cancel)
-
-entryList.appendChild(r)
-
-})
-
-}
-
 function saveEntry(){
 
 let date=entryDate.value
