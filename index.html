@@ -388,28 +388,30 @@ function saveEntry(){
 
 let date = document.getElementById("entryDate").value
 
-let rows = document.querySelectorAll(".entryRow")
+let entries = JSON.parse(localStorage.getItem("entries") || "{}")
 
-let entries = JSON.parse(localStorage.getItem("entries") || "[]")
+if(!entries[date]) entries[date] = {}
 
-rows.forEach((r,i)=>{
+document.querySelectorAll(".entryRow").forEach(r=>{
 
 let name = r.dataset.name
-let morning = parseFloat(r.querySelector(".morningQty").innerText)
-let evening = parseFloat(r.querySelector(".eveningQty").innerText)
 
-entries.push({
-date:date,
-name:name,
+let morning = parseFloat(r.querySelector(".morningQty").innerText) || 0
+let evening = parseFloat(r.querySelector(".eveningQty").innerText) || 0
+
+let cancelled = r.classList.contains("cancelled")
+
+entries[date][name] = {
 morning:morning,
-evening:evening
-})
+evening:evening,
+cancel:cancelled
+}
 
 })
 
 localStorage.setItem("entries",JSON.stringify(entries))
 
-alert("Daily entry saved")
+alert("Entry saved")
 
 }
 
