@@ -279,22 +279,7 @@ loadCustomers()
 
 }
 
-function loadCustomerBill(){
 
-let name = payCustomer.value
-
-let bill = JSON.parse(localStorage.getItem("lastBill_"+name)||"{}")
-
-if(!bill.amt){
-billInfo.innerHTML="No Bill Generated"
-return
-}
-
-billInfo.innerHTML =
-"Bill Period : "+bill.from+" → "+bill.to+
-"<br>Bill Amount : ₹"+bill.amt
-
-}
 function loadEntry(){
 
 entryDate.value=entryDate.value||new Date().toISOString().split("T")[0]
