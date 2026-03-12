@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gopal Gaushala</title>
 
@@ -11,45 +10,45 @@ body{
 font-family:Arial;
 margin:0;
 background:#eef3ff;
-font-size:20px;
+font-size:18px;
 }
 
 .header{
 background:#2f6fd1;
 color:white;
 text-align:center;
-padding:20px;
-font-size:28px;
+padding:18px;
+font-size:26px;
 font-weight:bold;
 }
 
 .container{
-padding:16px;
+padding:12px;
 }
 
 .menu{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:14px;
+gap:12px;
 }
 
 .box{
 background:#2f6fd1;
 color:yellow;
-padding:24px;
+padding:20px;
 text-align:center;
-border-radius:10px;
-font-size:22px;
+border-radius:8px;
+font-size:20px;
 }
 
 button{
 background:#2f6fd1;
 color:yellow;
 border:none;
-padding:16px;
-font-size:20px;
-border-radius:10px;
-margin-top:10px;
+padding:12px;
+font-size:18px;
+border-radius:8px;
+margin-top:8px;
 width:100%;
 }
 
@@ -58,24 +57,23 @@ background:#444;
 color:white;
 }
 
-input,select{
-width:100%;
-padding:14px;
-font-size:20px;
-margin-bottom:10px;
+.row{
+background:white;
+padding:10px;
+border-radius:8px;
+margin-bottom:8px;
 }
 
-.card{
-background:white;
-padding:16px;
-border-radius:10px;
-margin-bottom:12px;
+.smallbtn{
+width:auto;
+padding:6px 10px;
+font-size:14px;
 }
 
 .qtybtn{
-width:50px;
-height:50px;
-font-size:24px;
+width:34px;
+height:34px;
+font-size:18px;
 }
 
 .cancelled{
@@ -86,8 +84,14 @@ background:#ffd6d6;
 display:none;
 }
 
-</style>
+input,select{
+width:100%;
+padding:10px;
+font-size:16px;
+margin-bottom:8px;
+}
 
+</style>
 </head>
 
 <body>
@@ -113,6 +117,7 @@ display:none;
 
 </div>
 
+
 <!-- CUSTOMER MASTER -->
 
 <div id="master" class="hidden">
@@ -128,15 +133,16 @@ display:none;
 <option value="D">Delivery</option>
 </select>
 
-<input id="custMorning" type="number" step="0.5" placeholder="Std Morning Qty">
+<input id="custMorning" type="number" step="0.5" placeholder="Std Morning">
 
-<input id="custEvening" type="number" step="0.5" placeholder="Std Evening Qty">
+<input id="custEvening" type="number" step="0.5" placeholder="Std Evening">
 
-<button onclick="saveCustomer()">SAVE CUSTOMER</button>
+<button onclick="saveCustomer()">SAVE</button>
 
 <button class="backbtn" onclick="show('home')">BACK</button>
 
 </div>
+
 
 <!-- ENTRY -->
 
@@ -148,11 +154,14 @@ display:none;
 
 <div id="entryList"></div>
 
-<button onclick="addExtra()">+ ADD CUSTOMER FOR TODAY</button>
+<button onclick="addExtra()">+ ADD EXTRA CUSTOMER</button>
+
+<button onclick="saveEntry()">SAVE ENTRY</button>
 
 <button class="backbtn" onclick="show('home')">BACK</button>
 
 </div>
+
 
 <!-- BILLING -->
 
@@ -162,11 +171,14 @@ display:none;
 
 <select id="billCustomer"></select>
 
-<button onclick="alert('Billing logic next step')">GENERATE BILL</button>
+<button onclick="generateBill()">GENERATE BILL</button>
+
+<div id="billResult"></div>
 
 <button class="backbtn" onclick="show('home')">BACK</button>
 
 </div>
+
 
 <!-- PAYMENTS -->
 
@@ -186,11 +198,12 @@ display:none;
 
 </div>
 
+
 <!-- SETTINGS -->
 
 <div id="settings" class="hidden">
 
-<h3>Rate Settings</h3>
+<h3>Rates</h3>
 
 Pickup Rate
 
@@ -208,6 +221,7 @@ Delivery Rate
 
 </div>
 
+
 <script>
 
 /* navigation */
@@ -222,38 +236,40 @@ document.getElementById(p).classList.add("hidden")
 
 document.getElementById(id).classList.remove("hidden")
 
-if(id=="entry")loadEntry()
+if(id=="entry") loadEntry()
 
-if(id=="billing"||id=="payments")loadCustomers()
+if(id=="billing"||id=="payments") loadCustomers()
 
-if(id=="settings")loadRates()
+if(id=="settings") loadRates()
 
 }
 
-/* save customer */
+
+/* customer master */
 
 function saveCustomer(){
 
 let customers=JSON.parse(localStorage.getItem("customers")||"[]")
 
 customers.push({
-name:document.getElementById("custName").value,
-phone:document.getElementById("custPhone").value,
-type:document.getElementById("custType").value,
-morning:document.getElementById("custMorning").value,
-evening:document.getElementById("custEvening").value
+name:custName.value,
+phone:custPhone.value,
+type:custType.value,
+morning:custMorning.value,
+evening:custEvening.value
 })
 
 localStorage.setItem("customers",JSON.stringify(customers))
 
-document.getElementById("custName").value=""
-document.getElementById("custPhone").value=""
-document.getElementById("custMorning").value=""
-document.getElementById("custEvening").value=""
+custName.value=""
+custPhone.value=""
+custMorning.value=""
+custEvening.value=""
 
-alert("Customer saved")
+alert("Saved")
 
 }
+
 
 /* load customers */
 
@@ -267,56 +283,45 @@ customers.forEach(c=>{
 html+=`<option>${c.name}</option>`
 })
 
-if(document.getElementById("billCustomer"))
-document.getElementById("billCustomer").innerHTML=html
-
-if(document.getElementById("payCustomer"))
-document.getElementById("payCustomer").innerHTML=html
+billCustomer.innerHTML=html
+payCustomer.innerHTML=html
 
 }
 
-/* entry screen */
+
+/* entry */
 
 function loadEntry(){
 
-document.getElementById("entryDate").value =
-new Date().toISOString().slice(0,10)
+entryDate.value=new Date().toISOString().slice(0,10)
 
 let customers=JSON.parse(localStorage.getItem("customers")||"[]")
 
-let html=""
+entryList.innerHTML=""
 
 customers.forEach((c,i)=>{
 
-html+=`
+entryList.innerHTML+=`
 
-<div class="card" id="row${i}">
+<div class="row" id="row${i}">
 
 <b>${c.name} (${c.type})</b>
 
-<br><br>
-
-Morning
+<button class="smallbtn" onclick="cancel(${i})">Cancel</button>
 
 <br>
 
-<button class="qtybtn" onclick="chg(${i},'m',-0.5)">-</button>
+M 
+<button class="qtybtn" onclick="chg(${i},'m',-1)">-</button>
 <span id="m${i}">${c.morning}</span>
-<button class="qtybtn" onclick="chg(${i},'m',0.5)">+</button>
+<button class="qtybtn" onclick="chg(${i},'m',1)">+</button>
 
-<br><br>
+&nbsp;&nbsp;
 
-Evening
-
-<br>
-
-<button class="qtybtn" onclick="chg(${i},'e',-0.5)">-</button>
+E 
+<button class="qtybtn" onclick="chg(${i},'e',-1)">-</button>
 <span id="e${i}">${c.evening}</span>
-<button class="qtybtn" onclick="chg(${i},'e',0.5)">+</button>
-
-<br><br>
-
-<button onclick="cancel(${i})">CANCEL TODAY</button>
+<button class="qtybtn" onclick="chg(${i},'e',1)">+</button>
 
 </div>
 
@@ -324,64 +329,109 @@ Evening
 
 })
 
-document.getElementById("entryList").innerHTML=html
+}
+
+
+function chg(i,t,v){
+
+let el=document.getElementById(t+i)
+
+let val=parseFloat(el.innerText)+v
+
+if(val<0) val=0
+
+el.innerText=val
 
 }
 
-/* qty change */
-
-function chg(i,type,val){
-
-let el=document.getElementById(type+i)
-
-let v=parseFloat(el.innerText)+val
-
-if(v<0)v=0
-
-el.innerText=v
-
-}
-
-/* cancel */
 
 function cancel(i){
 
-let row=document.getElementById("row"+i)
+let r=document.getElementById("row"+i)
 
-row.classList.toggle("cancelled")
+if(r.classList.contains("cancelled")){
+r.classList.remove("cancelled")
+}else{
+r.classList.add("cancelled")
+}
 
 }
 
-/* add extra */
+
+/* extra customer */
 
 function addExtra(){
 
 let name=prompt("Customer name")
 
-if(!name)return
+let qty=prompt("Milk qty")
 
-let div=document.createElement("div")
+entryList.innerHTML+=`
 
-div.className="card"
+<div class="row">
 
-div.innerHTML=`<b>${name} (extra)</b>`
+<b>${name} (extra)</b>
 
-document.getElementById("entryList").appendChild(div)
+<br>
+
+Qty ${qty}
+
+</div>
+
+`
 
 }
 
-/* rate settings */
+
+/* save entry */
+
+function saveEntry(){
+
+alert("Entry saved (logic next version)")
+
+}
+
+
+/* billing */
+
+function generateBill(){
+
+let name=billCustomer.value
+
+let msg="Milk bill for "+name
+
+billResult.innerHTML=`
+
+<b>${msg}</b>
+
+<button onclick="sendWA('${msg}')">Send WhatsApp</button>
+
+`
+
+}
+
+
+function sendWA(msg){
+
+let url="https://wa.me/?text="+encodeURIComponent(msg)
+
+window.open(url)
+
+}
+
+
+/* settings */
 
 function saveRates(){
 
-let rates={
-pickup:document.getElementById("pickupRate").value,
-delivery:document.getElementById("deliveryRate").value
+let r={
+pickup:pickupRate.value,
+delivery:deliveryRate.value
 }
 
-localStorage.setItem("rates",JSON.stringify(rates))
+localStorage.setItem("rates",JSON.stringify(r))
 
-alert("Rates saved")
+alert("Saved")
 
 }
 
@@ -389,21 +439,19 @@ function loadRates(){
 
 let r=JSON.parse(localStorage.getItem("rates")||"{}")
 
-document.getElementById("pickupRate").value=r.pickup||90
-document.getElementById("deliveryRate").value=r.delivery||100
+pickupRate.value=r.pickup||90
+deliveryRate.value=r.delivery||100
 
 }
+
 
 /* backup */
 
 function backup(){
 
-let data={
-customers:localStorage.getItem("customers"),
-rates:localStorage.getItem("rates")
-}
+let data=localStorage
 
-let blob=new Blob([JSON.stringify(data)],{type:"application/json"})
+let blob=new Blob([JSON.stringify(data)])
 
 let a=document.createElement("a")
 
