@@ -808,14 +808,24 @@ vals[i].innerText=v
 
 function saveEntry(){
 
-let date=entryDate.value
-if(!date){alert("Select date");return}
+let date=document.getElementById("entryDate").value
+
+if(!date){
+alert("Select date")
+return
+}
 
 let rows=document.querySelectorAll(".entryRow")
 
 let data=JSON.parse(localStorage.getItem("entries")||"{}")
 
-if(!data[date])data[date]={}
+if(data[date]){
+if(!confirm("Entry already exists for this date. Overwrite?")){
+return
+}
+}
+
+data[date]={}
 
 rows.forEach(r=>{
 
@@ -823,9 +833,12 @@ let name=r.dataset.name
 
 let vals=r.querySelectorAll(".qtyVal")
 
+let m=parseInt(vals[0].innerText)||0
+let e=parseInt(vals[1].innerText)||0
+
 data[date][name]={
-m:parseInt(vals[0].innerText),
-e:parseInt(vals[1].innerText),
+m:m,
+e:e,
 c:r.classList.contains("cancelled")
 }
 
@@ -833,7 +846,9 @@ c:r.classList.contains("cancelled")
 
 localStorage.setItem("entries",JSON.stringify(data))
 
-alert("Entry Saved")
+alert("Daily Entry Saved")
+
+show("home")   // 👈 closes page after save
 
 }
 
