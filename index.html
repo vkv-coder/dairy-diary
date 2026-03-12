@@ -466,16 +466,6 @@ payCustomer.appendChild(o)
 
 }
 
-function loadCustomerBill(){
-
-let name=payCustomer.value
-
-let bill=JSON.parse(localStorage.getItem("lastBill_"+name)||"{}")
-
-billInfo.innerHTML="Bill Period : "+bill.from+" → "+bill.to+
-"<br>Bill Amount : ₹"+bill.amt
-
-}
 
 function savePayment(){
 
