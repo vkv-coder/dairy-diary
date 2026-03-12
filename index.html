@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -89,6 +90,11 @@ border:none;
 border-radius:6px
 }
 
+.cancelled{
+opacity:0.4;
+background:#ffe6e6;
+}
+
 </style>
 
 </head>
@@ -103,11 +109,11 @@ border-radius:6px
 
 <div class="menu">
 
-<button onclick="show('entry')">TODAY ENTRY</button>
-<button onclick="show('master')">CUSTOMERS</button>
-<button onclick="show('billing')">BILLING</button>
-<button onclick="show('payment')">PAYMENT</button>
-<button onclick="show('settings')">SETTINGS</button>
+<button onclick="show('entry')">📒 TODAY ENTRY</button>
+<button onclick="show('master')">👥 CUSTOMERS</button>
+<button onclick="show('billing')">🧾 BILLING</button>
+<button onclick="show('payment')">💰 PAYMENT</button>
+<button onclick="show('settings')">⚙ SETTINGS</button>
 
 </div>
 
@@ -120,7 +126,6 @@ border-radius:6px
 <h3>Customer Master</h3>
 
 <input id="cname" placeholder="Customer Name">
-
 <input id="phone1" placeholder="Phone 1">
 <input id="phone2" placeholder="Phone 2">
 
@@ -186,9 +191,7 @@ border-radius:6px
 
 <button onclick="generateBill()">GENERATE BILL</button>
 
-<button onclick="generateAllBills()">GENERATE ALL BILLS</button>
-
-  <div id="billResult"></div>
+<div id="billResult"></div>
 
 <button onclick="sendWhatsApp()">SEND WHATSAPP</button>
 
@@ -236,8 +239,11 @@ border-radius:6px
 function show(p){
 
 document.querySelectorAll(".page").forEach(x=>x.style.display="none")
-
 document.getElementById(p).style.display="block"
+
+if(p=="entry"){
+entryDate.value=new Date().toISOString().split("T")[0]
+}
 
 if(p=="master")loadCustomers()
 if(p=="billing")loadBilling()
@@ -279,25 +285,33 @@ loadCustomers()
 
 }
 
+function loadCustomers(){
+
+custList.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let d=document.createElement("div")
+d.innerText=c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")"
+
+custList.appendChild(d)
+
+})
+
+}
 
 function loadEntry(){
-
-entryDate.value=entryDate.value||new Date().toISOString().split("T")[0]
 
 entryList.innerHTML=""
 
 let customers=getCustomers()
-
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
 let date=entryDate.value
 
 customers.filter(c=>c.type==entryType.value).forEach(c=>{
 
 let r=document.createElement("div")
-
 r.className="row"
-
 r.dataset.name=c.name
 
 let m=c.m
@@ -323,7 +337,10 @@ cancel.className="cancel"
 cancel.innerText="X"
 cancel.onclick=()=>r.classList.toggle("cancelled")
 
-r.append(c.name,mInput,eInput,cancel)
+let cname=document.createElement("div")
+cname.innerText=c.name
+
+r.append(cname,mInput,eInput,cancel)
 
 entryList.appendChild(r)
 
@@ -379,10 +396,6 @@ billCustomer.appendChild(o)
 
 })
 
-billFrom.value=new Date().toISOString().split("T")[0]
-
-billTo.value=new Date().toISOString().split("T")[0]
-
 }
 
 function generateBill(){
@@ -399,15 +412,23 @@ return
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let total=0
+let mTotal=0
+let eTotal=0
 
 Object.keys(entries).forEach(d=>{
 
-if(d>=from && d<=to){
+let dDate=new Date(d)
+let fDate=new Date(from)
+let tDate=new Date(to)
+
+if(dDate>=fDate && dDate<=tDate){
 
 let day=entries[d]
 
 if(day[name] && !day[name].c){
 
+mTotal+=day[name].m
+eTotal+=day[name].e
 total+=day[name].m+day[name].e
 
 }
@@ -422,19 +443,20 @@ let rate=c.type=="D"?getRateD():getRateP()
 
 let amt=total*rate
 
-/* SAVE BILL */
 localStorage.setItem("lastBill_"+name,
 JSON.stringify({from:from,to:to,amt:amt}))
 
-/* SHOW BILL */
 billResult.innerHTML=
 "Customer : "+name+
 "<br>Period : "+from+" → "+to+
-"<br>Milk : "+total+" L"+
+"<br>Morning Milk : "+mTotal+" L"+
+"<br>Evening Milk : "+eTotal+" L"+
+"<br>Total Milk : "+total+" L"+
 "<br>Rate : ₹"+rate+
 "<br><b>Total : ₹"+amt+"</b>"
 
 }
+
 function loadPayment(){
 
 payCustomer.innerHTML=""
@@ -449,6 +471,8 @@ payCustomer.appendChild(o)
 
 })
 
+loadCustomerBill()
+
 }
 
 function loadCustomerBill(){
@@ -457,14 +481,33 @@ let name=payCustomer.value
 
 let bill=JSON.parse(localStorage.getItem("lastBill_"+name)||"{}")
 
-billInfo.innerHTML="Bill Period : "+bill.from+" → "+bill.to+
+if(!bill.amt){
+billInfo.innerHTML="No Bill Generated"
+return
+}
+
+billInfo.innerHTML=
+"Bill Period : "+bill.from+" → "+bill.to+
 "<br>Bill Amount : ₹"+bill.amt
 
 }
 
 function savePayment(){
 
+let name=payCustomer.value
+let amt=parseFloat(recAmt.value)||0
+
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+
+if(!payments[name])payments[name]=0
+
+payments[name]+=amt
+
+localStorage.setItem("payments",JSON.stringify(payments))
+
 alert("Payment Saved")
+
+recAmt.value=""
 
 }
 
@@ -492,8 +535,14 @@ alert("Rates Saved")
 
 }
 
+function sendWhatsApp(){
+
+alert("WhatsApp feature next step")
+
+}
+
 </script>
 
 </body>
 </html>
-
+```
