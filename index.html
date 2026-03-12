@@ -386,9 +386,37 @@ Qty ${qty}
 
 function saveEntry(){
 
-alert("Entry saved (logic next version)")
+let date = entryDate.value
+
+let rows = document.querySelectorAll("#entryList .row")
+
+let entries = JSON.parse(localStorage.getItem("entries") || "[]")
+
+rows.forEach((r,i)=>{
+
+let name = r.querySelector("b").innerText.split("(")[0].trim()
+
+let morning = r.querySelector("#m"+i)?.innerText || 0
+let evening = r.querySelector("#e"+i)?.innerText || 0
+
+let cancelled = r.classList.contains("cancelled")
+
+entries.push({
+date:date,
+name:name,
+morning:parseFloat(morning),
+evening:parseFloat(evening),
+cancelled:cancelled
+})
+
+})
+
+localStorage.setItem("entries",JSON.stringify(entries))
+
+alert("Daily entry saved")
 
 }
+  }
 
 
 /* billing */
