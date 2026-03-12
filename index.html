@@ -809,7 +809,7 @@ vals[i].innerText=v
 function saveEntry(){
 
 let date=document.getElementById("entryDate").value
-
+new Date().toISOString().split("T")[0]
 if(!date){
 alert("Select date")
 return
