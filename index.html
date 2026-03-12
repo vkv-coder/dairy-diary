@@ -423,20 +423,42 @@ alert("Daily entry saved")
 
 function generateBill(){
 
-let name=billCustomer.value
+let name = document.getElementById("billCustomer").value
 
-let msg="Milk bill for "+name
+let entries = JSON.parse(localStorage.getItem("entries") || "[]")
 
-billResult.innerHTML=`
+let rateP = parseFloat(localStorage.getItem("rateP") || 90)
+let rateD = parseFloat(localStorage.getItem("rateD") || 100)
 
-<b>${msg}</b>
+let customers = JSON.parse(localStorage.getItem("customers") || "[]")
 
-<button onclick="sendWA('${msg}')">Send WhatsApp</button>
+let cust = customers.find(c=>c.name===name)
 
+let rate = cust.type==="D" ? rateD : rateP
+
+let totalMilk = 0
+
+entries.forEach(e=>{
+ if(e.name===name && !e.cancelled){
+   totalMilk += (e.morning + e.evening)
+ }
+})
+
+let amount = totalMilk * rate
+
+document.getElementById("billResult").innerHTML =
+`
+Milk : ${totalMilk} L<br><br>
+Rate : ₹${rate}<br><br>
+Total : ₹${amount}
 `
 
+window.currentBill = {
+name:name,
+milk:totalMilk,
+rate:rate,
+amount:amount
 }
-
 
 function sendWA(msg){
 
