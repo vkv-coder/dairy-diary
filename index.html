@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gopal Gaushala</title>
 
@@ -24,21 +25,20 @@ font-weight:bold;
 
 .container{
 padding:16px;
-width:100%;
 }
 
 .menu{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:16px;
+gap:14px;
 }
 
 .box{
 background:#2f6fd1;
 color:yellow;
-padding:26px;
+padding:24px;
 text-align:center;
-border-radius:12px;
+border-radius:10px;
 font-size:22px;
 }
 
@@ -46,8 +46,8 @@ button{
 background:#2f6fd1;
 color:yellow;
 border:none;
-padding:18px;
-font-size:22px;
+padding:16px;
+font-size:20px;
 border-radius:10px;
 margin-top:10px;
 width:100%;
@@ -60,24 +60,34 @@ color:white;
 
 input,select{
 width:100%;
+padding:14px;
+font-size:20px;
+margin-bottom:10px;
+}
+
+.card{
+background:white;
 padding:16px;
-font-size:22px;
-margin-top:6px;
-margin-bottom:14px;
+border-radius:10px;
+margin-bottom:12px;
+}
+
+.qtybtn{
+width:50px;
+height:50px;
+font-size:24px;
+}
+
+.cancelled{
+background:#ffd6d6;
 }
 
 .hidden{
 display:none;
 }
 
-.card{
-background:white;
-padding:18px;
-border-radius:12px;
-margin-bottom:14px;
-}
-
 </style>
+
 </head>
 
 <body>
@@ -103,30 +113,24 @@ margin-bottom:14px;
 
 </div>
 
-
 <!-- CUSTOMER MASTER -->
 
 <div id="master" class="hidden">
 
-<h2>Add Customer</h2>
+<h3>Add Customer</h3>
 
-Name
-<input id="custName">
+<input id="custName" placeholder="Name">
 
-Phone
-<input id="custPhone">
+<input id="custPhone" placeholder="Phone">
 
-Type
 <select id="custType">
 <option value="P">Pickup</option>
 <option value="D">Delivery</option>
 </select>
 
-Morning Qty
-<input id="custMorning" type="number" step="0.5">
+<input id="custMorning" type="number" step="0.5" placeholder="Std Morning Qty">
 
-Evening Qty
-<input id="custEvening" type="number" step="0.5">
+<input id="custEvening" type="number" step="0.5" placeholder="Std Evening Qty">
 
 <button onclick="saveCustomer()">SAVE CUSTOMER</button>
 
@@ -134,58 +138,47 @@ Evening Qty
 
 </div>
 
-
 <!-- ENTRY -->
 
 <div id="entry" class="hidden">
 
-<h2>Daily Entry</h2>
+<h3>Daily Entry</h3>
 
 <input type="date" id="entryDate">
 
 <div id="entryList"></div>
 
-<button>SAVE ENTRY</button>
+<button onclick="addExtra()">+ ADD CUSTOMER FOR TODAY</button>
 
 <button class="backbtn" onclick="show('home')">BACK</button>
 
 </div>
-
 
 <!-- BILLING -->
 
 <div id="billing" class="hidden">
 
-<h2>Billing</h2>
+<h3>Billing</h3>
 
 <select id="billCustomer"></select>
 
-Rate
-<input id="billRate">
-
-<button>VIEW LEDGER</button>
-
-<button>GENERATE TOTAL BILL</button>
+<button onclick="alert('Billing logic next step')">GENERATE BILL</button>
 
 <button class="backbtn" onclick="show('home')">BACK</button>
 
 </div>
 
-
 <!-- PAYMENTS -->
 
 <div id="payments" class="hidden">
 
-<h2>Payments</h2>
+<h3>Payments</h3>
 
-Customer
 <select id="payCustomer"></select>
 
-Bill Amount
-<input>
+<input placeholder="Bill Amount">
 
-Received Amount
-<input>
+<input placeholder="Received Amount">
 
 <button>SAVE PAYMENT</button>
 
@@ -193,28 +186,27 @@ Received Amount
 
 </div>
 
-
 <!-- SETTINGS -->
 
 <div id="settings" class="hidden">
 
-<h2>Rate Settings</h2>
+<h3>Rate Settings</h3>
 
-Pickup Rate (P)
+Pickup Rate
+
 <input id="pickupRate">
 
-Delivery Rate (D)
+Delivery Rate
+
 <input id="deliveryRate">
 
-<button onclick="saveRates()">SAVE SETTINGS</button>
+<button onclick="saveRates()">SAVE</button>
 
 <button class="backbtn" onclick="show('home')">BACK</button>
 
 </div>
 
-
 </div>
-
 
 <script>
 
@@ -230,12 +222,15 @@ document.getElementById(p).classList.add("hidden")
 
 document.getElementById(id).classList.remove("hidden")
 
-if(id=="settings"){loadRates()}
+if(id=="entry")loadEntry()
+
+if(id=="billing"||id=="payments")loadCustomers()
+
+if(id=="settings")loadRates()
 
 }
 
-
-/* customer save */
+/* save customer */
 
 function saveCustomer(){
 
@@ -251,10 +246,129 @@ evening:document.getElementById("custEvening").value
 
 localStorage.setItem("customers",JSON.stringify(customers))
 
+document.getElementById("custName").value=""
+document.getElementById("custPhone").value=""
+document.getElementById("custMorning").value=""
+document.getElementById("custEvening").value=""
+
 alert("Customer saved")
 
 }
 
+/* load customers */
+
+function loadCustomers(){
+
+let customers=JSON.parse(localStorage.getItem("customers")||"[]")
+
+let html=""
+
+customers.forEach(c=>{
+html+=`<option>${c.name}</option>`
+})
+
+if(document.getElementById("billCustomer"))
+document.getElementById("billCustomer").innerHTML=html
+
+if(document.getElementById("payCustomer"))
+document.getElementById("payCustomer").innerHTML=html
+
+}
+
+/* entry screen */
+
+function loadEntry(){
+
+document.getElementById("entryDate").value=
+new Date().toISOString().split("T")[0]
+
+let customers=JSON.parse(localStorage.getItem("customers")||"[]")
+
+let html=""
+
+customers.forEach((c,i)=>{
+
+html+=`
+
+<div class="card" id="row${i}">
+
+<b>${c.name} (${c.type})</b>
+
+<br><br>
+
+Morning
+
+<br>
+
+<button class="qtybtn" onclick="chg(${i},'m',-0.5)">-</button>
+<span id="m${i}">${c.morning}</span>
+<button class="qtybtn" onclick="chg(${i},'m',0.5)">+</button>
+
+<br><br>
+
+Evening
+
+<br>
+
+<button class="qtybtn" onclick="chg(${i},'e',-0.5)">-</button>
+<span id="e${i}">${c.evening}</span>
+<button class="qtybtn" onclick="chg(${i},'e',0.5)">+</button>
+
+<br><br>
+
+<button onclick="cancel(${i})">CANCEL TODAY</button>
+
+</div>
+
+`
+
+})
+
+document.getElementById("entryList").innerHTML=html
+
+}
+
+/* qty change */
+
+function chg(i,type,val){
+
+let el=document.getElementById(type+i)
+
+let v=parseFloat(el.innerText)+val
+
+if(v<0)v=0
+
+el.innerText=v
+
+}
+
+/* cancel */
+
+function cancel(i){
+
+let row=document.getElementById("row"+i)
+
+row.classList.toggle("cancelled")
+
+}
+
+/* add extra */
+
+function addExtra(){
+
+let name=prompt("Customer name")
+
+if(!name)return
+
+let div=document.createElement("div")
+
+div.className="card"
+
+div.innerHTML=`<b>${name} (extra)</b>`
+
+document.getElementById("entryList").appendChild(div)
+
+}
 
 /* rate settings */
 
@@ -273,13 +387,12 @@ alert("Rates saved")
 
 function loadRates(){
 
-let rates=JSON.parse(localStorage.getItem("rates")||"{}")
+let r=JSON.parse(localStorage.getItem("rates")||"{}")
 
-document.getElementById("pickupRate").value=rates.pickup||90
-document.getElementById("deliveryRate").value=rates.delivery||100
+document.getElementById("pickupRate").value=r.pickup||90
+document.getElementById("deliveryRate").value=r.delivery||100
 
 }
-
 
 /* backup */
 
@@ -296,7 +409,7 @@ let a=document.createElement("a")
 
 a.href=URL.createObjectURL(blob)
 
-a.download="gopal_gaushala_backup.json"
+a.download="gaushala_backup.json"
 
 a.click()
 
