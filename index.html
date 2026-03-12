@@ -877,11 +877,23 @@ let name=billCustomer.value
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let total=0
+let fromDate=""
+let toDate=""
 
-Object.values(entries).forEach(day=>{
+Object.keys(entries).forEach(d=>{
+
+let day=entries[d]
+
 if(day[name] && !day[name].c){
-total+=day[name].m+day[name].e
+
+if(!fromDate) fromDate=d
+toDate=d
+
+total += (parseInt(day[name].m)||0)
+total += (parseInt(day[name].e)||0)
+
 }
+
 })
 
 let c=getCustomers().find(x=>x.name==name)
@@ -892,7 +904,13 @@ let amt=total*rate
 
 window.bill={name,total,rate,amt}
 
-billResult.innerHTML="Milk: "+total+" L<br>Rate: ₹"+rate+"<br>Total: ₹"+amt
+localStorage.setItem("lastBillAmount",amt)
+
+billResult.innerHTML=
+"Period: "+fromDate+" → "+toDate+
+"<br>Milk: "+total+" L"+
+"<br>Rate: ₹"+rate+
+"<br>Total: ₹"+amt
 
 }
 
