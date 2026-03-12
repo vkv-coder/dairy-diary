@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,25 +16,26 @@ background:#eef3ff;
 .header{
 background:#2f6fd1;
 color:white;
-padding:20px;
+padding:18px;
 text-align:center;
 font-size:24px;
+font-weight:bold;
 }
 
 .container{
-padding:20px;
-max-width:500px;
+padding:16px;
+max-width:520px;
 margin:auto;
 }
 
 .menu{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:10px;
+gap:12px;
 }
 
-button{
-padding:20px;
+.menu button{
+padding:18px;
 font-size:18px;
 background:#2f6fd1;
 color:yellow;
@@ -45,6 +45,79 @@ border-radius:10px;
 
 .page{
 display:none;
+}
+
+input,select{
+width:100%;
+padding:12px;
+font-size:18px;
+margin-top:6px;
+margin-bottom:12px;
+}
+
+button{
+width:100%;
+padding:14px;
+font-size:18px;
+background:#2f6fd1;
+color:yellow;
+border:none;
+border-radius:10px;
+margin-top:8px;
+}
+
+.back{
+background:#444;
+color:white;
+}
+
+.entryRow{
+background:white;
+padding:10px;
+border-radius:10px;
+margin-bottom:8px;
+font-size:20px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:6px;
+}
+
+.qtyBtn{
+width:36px;
+height:36px;
+font-size:22px;
+border:none;
+border-radius:8px;
+background:#2f6fd1;
+color:yellow;
+}
+
+.qtyVal{
+font-size:22px;
+min-width:26px;
+text-align:center;
+}
+
+.cancelBtn{
+background:red;
+color:white;
+width:36px;
+height:36px;
+border:none;
+border-radius:8px;
+font-size:18px;
+}
+
+.cancelled{
+background:#ffd6d6;
+}
+
+.smallDelete{
+background:red;
+color:white;
+font-size:14px;
+padding:6px;
 }
 
 </style>
@@ -57,6 +130,8 @@ display:none;
 
 <div class="container">
 
+<!-- HOME -->
+
 <div id="home" class="page">
 
 <div class="menu">
@@ -65,40 +140,108 @@ display:none;
 <button onclick="show('customer')">CUSTOMER MASTER</button>
 <button onclick="show('billing')">BILLING</button>
 <button onclick="show('payment')">PAYMENTS</button>
+<button onclick="show('settings')">SETTINGS</button>
 
 </div>
 
 </div>
 
-<div id="entry" class="page">
 
-<h3>Daily Entry</h3>
-
-<button onclick="show('home')">BACK</button>
-
-</div>
+<!-- CUSTOMER MASTER -->
 
 <div id="customer" class="page">
 
 <h3>Customer Master</h3>
 
-<button onclick="show('home')">BACK</button>
+<input id="custName" placeholder="Customer Name">
+<input id="custPhone" placeholder="Phone Number">
+
+<select id="custType">
+<option value="P">Pickup</option>
+<option value="D">Delivery</option>
+</select>
+
+<input id="custM" placeholder="Std Morning Qty">
+<input id="custE" placeholder="Std Evening Qty">
+
+<button onclick="addCustomer()">SAVE CUSTOMER</button>
+
+<div id="customerList"></div>
+
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
+
+
+<!-- DAILY ENTRY -->
+
+<div id="entry" class="page">
+
+<h3>Daily Entry</h3>
+
+<input type="date" id="entryDate">
+
+<div id="entryList"></div>
+
+<button onclick="saveEntry()">SAVE ENTRY</button>
+
+<button class="back" onclick="show('home')">BACK</button>
+
+</div>
+
+
+<!-- BILLING -->
 
 <div id="billing" class="page">
 
 <h3>Billing</h3>
 
-<button onclick="show('home')">BACK</button>
+<select id="billCustomer"></select>
+
+<button onclick="generateBill()">GENERATE BILL</button>
+
+<div id="billResult"></div>
+
+<button onclick="sendWhatsApp()">Send WhatsApp</button>
+
+<button onclick="generateAll()">GENERATE ALL BILLS</button>
+
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
+
+
+<!-- PAYMENT -->
 
 <div id="payment" class="page">
 
 <h3>Payment</h3>
 
-<button onclick="show('home')">BACK</button>
+<select id="payCustomer"></select>
+
+<input id="billAmt" placeholder="Bill Amount">
+
+<input id="recAmt" placeholder="Received Amount">
+
+<button onclick="savePayment()">SAVE PAYMENT</button>
+
+<button class="back" onclick="show('home')">BACK</button>
+
+</div>
+
+
+<!-- SETTINGS -->
+
+<div id="settings" class="page">
+
+<h3>Settings</h3>
+
+<input id="rateP" placeholder="Pickup Rate">
+<input id="rateD" placeholder="Delivery Rate">
+
+<button onclick="saveRates()">SAVE RATES</button>
+
+<button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
@@ -108,15 +251,336 @@ display:none;
 
 function show(p){
 
-document.querySelectorAll(".page").forEach(function(x){
-x.style.display="none"
-})
+document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 
 document.getElementById(p).style.display="block"
+
+if(p=="customer") loadCustomers()
+if(p=="entry") loadEntry()
+if(p=="billing") loadBilling()
+if(p=="payment") loadPayment()
+if(p=="settings") loadRates()
 
 }
 
 show("home")
+
+
+function getCustomers(){
+return JSON.parse(localStorage.getItem("customers")||"[]")
+}
+
+function saveCustomers(c){
+localStorage.setItem("customers",JSON.stringify(c))
+}
+
+
+function addCustomer(){
+
+let name=custName.value.trim()
+if(!name) return
+
+let c=getCustomers()
+
+if(c.find(x=>x.name==name)){
+alert("Customer already exists")
+return
+}
+
+c.push({
+name:name,
+phone:custPhone.value,
+type:custType.value,
+m:parseFloat(custM.value)||0,
+e:parseFloat(custE.value)||0
+})
+
+saveCustomers(c)
+
+custName.value=""
+custPhone.value=""
+custM.value=""
+custE.value=""
+
+loadCustomers()
+
+}
+
+
+function deleteCustomer(n){
+
+let c=getCustomers().filter(x=>x.name!=n)
+
+saveCustomers(c)
+
+loadCustomers()
+
+}
+
+
+function loadCustomers(){
+
+let list=document.getElementById("customerList")
+
+list.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let d=document.createElement("div")
+
+d.className="entryRow"
+
+d.innerHTML=c.name+" ("+c.type+")"
+
+let del=document.createElement("button")
+del.className="smallDelete"
+del.innerText="Delete"
+del.onclick=()=>deleteCustomer(c.name)
+
+d.appendChild(del)
+
+list.appendChild(d)
+
+})
+
+}
+
+
+
+function loadEntry(){
+
+let list=document.getElementById("entryList")
+
+list.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let row=document.createElement("div")
+
+row.className="entryRow"
+row.dataset.name=c.name
+
+row.innerHTML="<b>"+c.name+" ("+c.type+")</b>"
+
+let mMinus=btn("-",()=>change(row,"m",-1))
+let mVal=val(c.m)
+let mPlus=btn("+",()=>change(row,"m",1))
+
+let eMinus=btn("-",()=>change(row,"e",-1))
+let eVal=val(c.e)
+let ePlus=btn("+",()=>change(row,"e",1))
+
+let cancel=document.createElement("button")
+cancel.className="cancelBtn"
+cancel.innerText="❌"
+cancel.onclick=()=>row.classList.toggle("cancelled")
+
+row.append(" M",mMinus,mVal,mPlus," E",eMinus,eVal,ePlus,cancel)
+
+list.appendChild(row)
+
+})
+
+}
+
+
+function btn(t,fn){
+let b=document.createElement("button")
+b.className="qtyBtn"
+b.innerText=t
+b.onclick=fn
+return b
+}
+
+function val(v){
+let s=document.createElement("span")
+s.className="qtyVal"
+s.innerText=v
+return s
+}
+
+function change(row,type,d){
+
+let vals=row.querySelectorAll(".qtyVal")
+
+let i=type=="m"?0:1
+
+let v=parseInt(vals[i].innerText)+d
+if(v<0)v=0
+vals[i].innerText=v
+
+}
+
+
+function saveEntry(){
+
+let date=entryDate.value
+if(!date){alert("Select date");return}
+
+let rows=document.querySelectorAll(".entryRow")
+
+let data=JSON.parse(localStorage.getItem("entries")||"{}")
+
+if(!data[date])data[date]={}
+
+rows.forEach(r=>{
+
+let name=r.dataset.name
+
+let vals=r.querySelectorAll(".qtyVal")
+
+data[date][name]={
+m:parseInt(vals[0].innerText),
+e:parseInt(vals[1].innerText),
+c:r.classList.contains("cancelled")
+}
+
+})
+
+localStorage.setItem("entries",JSON.stringify(data))
+
+alert("Entry Saved")
+
+}
+
+
+function loadBilling(){
+
+billCustomer.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let o=document.createElement("option")
+o.value=c.name
+o.textContent=c.name
+
+billCustomer.appendChild(o)
+
+})
+
+}
+
+
+function generateBill(){
+
+let name=billCustomer.value
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let total=0
+
+Object.values(entries).forEach(day=>{
+if(day[name] && !day[name].c){
+total+=day[name].m+day[name].e
+}
+})
+
+let c=getCustomers().find(x=>x.name==name)
+
+let rate=c.type=="D"?getRateD():getRateP()
+
+let amt=total*rate
+
+window.bill={name,total,rate,amt}
+
+billResult.innerHTML="Milk: "+total+" L<br>Rate: ₹"+rate+"<br>Total: ₹"+amt
+
+}
+
+
+function sendWhatsApp(){
+
+let b=window.bill
+if(!b)return
+
+let msg=`GOPAL GAUSHALA
+
+Customer: ${b.name}
+
+Milk: ${b.total} L
+Rate: ₹${b.rate}
+
+Total: ₹${b.amt}`
+
+window.open("https://wa.me/?text="+encodeURIComponent(msg))
+
+}
+
+
+function generateAll(){
+
+let out=""
+
+getCustomers().forEach(c=>{
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let total=0
+
+Object.values(entries).forEach(day=>{
+if(day[c.name] && !day[c.name].c){
+total+=day[c.name].m+day[c.name].e
+}
+})
+
+let rate=c.type=="D"?getRateD():getRateP()
+
+let amt=total*rate
+
+out+=c.name+" : "+total+"L = ₹"+amt+"<br>"
+
+})
+
+billResult.innerHTML=out
+
+}
+
+
+function loadPayment(){
+
+payCustomer.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let o=document.createElement("option")
+o.value=c.name
+o.textContent=c.name
+
+payCustomer.appendChild(o)
+
+})
+
+}
+
+
+function savePayment(){
+alert("Payment saved (ledger next version)")
+}
+
+
+function getRateP(){
+return parseFloat(localStorage.getItem("rateP")||90)
+}
+
+function getRateD(){
+return parseFloat(localStorage.getItem("rateD")||100)
+}
+
+function loadRates(){
+
+rateP.value=getRateP()
+rateD.value=getRateD()
+
+}
+
+function saveRates(){
+
+localStorage.setItem("rateP",rateP.value)
+localStorage.setItem("rateD",rateD.value)
+
+alert("Rates Saved")
+
+}
 
 </script>
 
