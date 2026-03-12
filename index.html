@@ -386,27 +386,23 @@ Qty ${qty}
 
 function saveEntry(){
 
-let date = entryDate.value
+let date = document.getElementById("entryDate").value
 
-let rows = document.querySelectorAll("#entryList .row")
+let rows = document.querySelectorAll(".entryRow")
 
 let entries = JSON.parse(localStorage.getItem("entries") || "[]")
 
 rows.forEach((r,i)=>{
 
-let name = r.querySelector("b").innerText.split("(")[0].trim()
-
-let morning = r.querySelector("#m"+i)?.innerText || 0
-let evening = r.querySelector("#e"+i)?.innerText || 0
-
-let cancelled = r.classList.contains("cancelled")
+let name = r.dataset.name
+let morning = parseFloat(r.querySelector(".morningQty").innerText)
+let evening = parseFloat(r.querySelector(".eveningQty").innerText)
 
 entries.push({
 date:date,
 name:name,
-morning:parseFloat(morning),
-evening:parseFloat(evening),
-cancelled:cancelled
+morning:morning,
+evening:evening
 })
 
 })
@@ -416,10 +412,6 @@ localStorage.setItem("entries",JSON.stringify(entries))
 alert("Daily entry saved")
 
 }
-  }
-
-
-/* billing */
 
 function generateBill(){
 
