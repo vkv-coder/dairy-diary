@@ -405,11 +405,15 @@ billTo.value=new Date().toISOString().split("T")[0]
 function generateBill(){
 
 let name=billCustomer.value
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
 let from=billFrom.value
 let to=billTo.value
+
+if(!from || !to){
+alert("Select From and To Date")
+return
+}
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let total=0
 
@@ -435,27 +439,46 @@ let rate=c.type=="D"?getRateD():getRateP()
 
 let amt=total*rate
 
-localStorage.setItem("lastBill_"+name,JSON.stringify({from,to,amt}))
+billResult.innerHTML=
+"Customer : "+name+
+"<br>Period : "+from+" → "+to+
+"<br>Milk : "+total+" L"+
+"<br>Rate : ₹"+rate+
+"<br><b>Total : ₹"+amt+"</b>"
 
-billResult.innerHTML="Milk "+total+" L<br>Total ₹"+amt
+localStorage.setItem("lastBill_"+name,
+JSON.stringify({from,to,amt}))
 
 }
-
 function generateAllBills(){
 
-let out=""
+let from=billFrom.value
+let to=billTo.value
 
-getCustomers().forEach(c=>{
+if(!from || !to){
+alert("Select From and To Date")
+return
+}
 
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
-let total=0
+let out=""
+let grandQty=0
+let grandAmt=0
 
-Object.values(entries).forEach(day=>{
+getCustomers().forEach(c=>{
+
+let qty=0
+
+Object.keys(entries).forEach(d=>{
+
+if(d>=from && d<=to){
+
+let day=entries[d]
 
 if(day[c.name] && !day[c.name].c){
-
-total+=day[c.name].m+day[c.name].e
+qty+=day[c.name].m+day[c.name].e
+}
 
 }
 
@@ -463,16 +486,21 @@ total+=day[c.name].m+day[c.name].e
 
 let rate=c.type=="D"?getRateD():getRateP()
 
-let amt=total*rate
+let amt=qty*rate
 
-out+=c.name+" : "+total+"L = ₹"+amt+"<br>"
+grandQty+=qty
+grandAmt+=amt
+
+out+=c.name+" : "+qty+" L = ₹"+amt+"<br>"
 
 })
+
+out+="<hr>Total Milk : "+grandQty+" L"
+out+="<br>Total Amount : ₹"+grandAmt
 
 billResult.innerHTML=out
 
 }
-
 function loadPayment(){
 
 payCustomer.innerHTML=""
