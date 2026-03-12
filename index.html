@@ -437,66 +437,17 @@ let rate=c.type=="D"?getRateD():getRateP()
 
 let amt=total*rate
 
+/* SAVE BILL */
+localStorage.setItem("lastBill_"+name,
+JSON.stringify({from:from,to:to,amt:amt}))
+
+/* SHOW BILL */
 billResult.innerHTML=
 "Customer : "+name+
 "<br>Period : "+from+" → "+to+
 "<br>Milk : "+total+" L"+
 "<br>Rate : ₹"+rate+
 "<br><b>Total : ₹"+amt+"</b>"
-
-localStorage.setItem("lastBill_"+name,
-JSON.stringify({from,to,amt}))
-
-}
-function generateAllBills(){
-
-let from=billFrom.value
-let to=billTo.value
-
-if(!from || !to){
-alert("Select From and To Date")
-return
-}
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let out=""
-let grandQty=0
-let grandAmt=0
-
-getCustomers().forEach(c=>{
-
-let qty=0
-
-Object.keys(entries).forEach(d=>{
-
-if(d>=from && d<=to){
-
-let day=entries[d]
-
-if(day[c.name] && !day[c.name].c){
-qty+=day[c.name].m+day[c.name].e
-}
-
-}
-
-})
-
-let rate=c.type=="D"?getRateD():getRateP()
-
-let amt=qty*rate
-
-grandQty+=qty
-grandAmt+=amt
-
-out+=c.name+" : "+qty+" L = ₹"+amt+"<br>"
-
-})
-
-out+="<hr>Total Milk : "+grandQty+" L"
-out+="<br>Total Amount : ₹"+grandAmt
-
-billResult.innerHTML=out
 
 }
 function loadPayment(){
