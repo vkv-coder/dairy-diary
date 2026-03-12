@@ -2,9 +2,7 @@
 <html>
 
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Dairy Milk</title>
 
 <style>
@@ -20,78 +18,27 @@ font-size:20px;
 background:#2f6fd1;
 color:white;
 text-align:center;
-padding:18px;
+padding:20px;
 font-size:26px;
 }
 
 .container{
-padding:16px;
-}
-
-.dashboard{
-background:white;
-padding:16px;
-border-radius:10px;
-margin-bottom:16px;
-font-size:22px;
+padding:20px;
 }
 
 .menu{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:16px;
+gap:15px;
 }
 
 .box{
 background:#2f6fd1;
 color:yellow;
-padding:22px;
+padding:25px;
 text-align:center;
 border-radius:12px;
 font-size:22px;
-}
-
-input, select{
-width:100%;
-padding:14px;
-font-size:20px;
-margin-top:6px;
-margin-bottom:12px;
-}
-
-button{
-background:#2f6fd1;
-color:yellow;
-border:none;
-padding:16px;
-font-size:20px;
-border-radius:10px;
-margin-top:10px;
-width:100%;
-}
-
-.qtybtn{
-width:60px;
-height:60px;
-font-size:26px;
-}
-
-.row{
-background:white;
-padding:16px;
-border-radius:10px;
-margin-bottom:16px;
-}
-
-.green{
-background:green!important;
-color:white!important;
-}
-
-.backbtn{
-background:#555;
-color:white;
-margin-top:30px;
 }
 
 </style>
@@ -102,14 +49,7 @@ margin-top:30px;
 
 <div class="header">🥛 Dairy Milk</div>
 
-<div class="container" id="home">
-
-<div class="dashboard" id="totals">
-Morning : 0 L<br>
-Evening : 0 L<br>
-Total Milk : 0 L<br>
-Amount : ₹0
-</div>
+<div class="container">
 
 <div class="menu">
 
@@ -120,47 +60,6 @@ Amount : ₹0
 <div class="box">BACKUP</div>
 
 </div>
-
-</div>
-
-<div class="container" id="entry" style="display:none">
-
-<h3>Entry Date</h3>
-<input type="date">
-
-<div class="row">
-
-<b>Customer : Example</b>
-
-<br><br>
-
-Morning
-
-<br>
-
-<button class="qtybtn">-</button>
-1.5
-<button class="qtybtn">+</button>
-
-<button>PAID</button>
-
-<br><br>
-
-Evening
-
-<br>
-
-<button class="qtybtn">-</button>
-0.5
-<button class="qtybtn">+</button>
-
-<button>PAID</button>
-
-</div>
-
-<button>SAVE ENTRY</button>
-
-<button class="backbtn">BACK</button>
 
 </div>
 
