@@ -44,7 +44,7 @@ border-radius:10px
 input,select{
 width:100%;
 padding:10px;
-font-size:17px;
+font-size:16px;
 margin-top:6px;
 margin-bottom:10px
 }
@@ -52,7 +52,7 @@ margin-bottom:10px
 button{
 width:100%;
 padding:12px;
-font-size:17px;
+font-size:16px;
 background:#2f6fd1;
 color:yellow;
 border:none;
@@ -60,7 +60,10 @@ border-radius:8px;
 margin-top:6px
 }
 
-.back{background:#444;color:white}
+.back{
+background:#444;
+color:white
+}
 
 .row{
 display:grid;
@@ -70,6 +73,13 @@ background:white;
 padding:8px;
 margin-bottom:6px;
 border-radius:8px
+}
+
+.head{
+display:grid;
+grid-template-columns:2fr 1fr 1fr 40px;
+font-weight:bold;
+margin-bottom:5px
 }
 
 .cancel{
@@ -103,6 +113,7 @@ border-radius:6px
 
 </div>
 
+<!-- CUSTOMER MASTER -->
 
 <div id="master" class="page">
 
@@ -129,6 +140,7 @@ border-radius:6px
 
 </div>
 
+<!-- DAILY ENTRY -->
 
 <div id="entry" class="page">
 
@@ -143,6 +155,13 @@ border-radius:6px
 
 <button onclick="loadEntry()">LOAD ENTRY</button>
 
+<div class="head">
+<div>Customer</div>
+<div>Morning</div>
+<div>Evening</div>
+<div></div>
+</div>
+
 <div id="entryList"></div>
 
 <button onclick="saveEntry()">SAVE ENTRY</button>
@@ -151,6 +170,7 @@ border-radius:6px
 
 </div>
 
+<!-- BILLING -->
 
 <div id="billing" class="page">
 
@@ -158,28 +178,33 @@ border-radius:6px
 
 <select id="billCustomer"></select>
 
+<label>From Date</label>
+<input type="date" id="billFrom">
+
+<label>To Date</label>
+<input type="date" id="billTo">
+
 <button onclick="generateBill()">GENERATE BILL</button>
 
 <div id="billResult"></div>
 
-<button onclick="sendWhatsApp()">SEND WHATSAPP</button>
-
 <button onclick="generateAllBills()">GENERATE ALL BILLS</button>
 
-<button onclick="sendAllWhatsApp()">SEND ALL WHATSAPP</button>
+<button onclick="sendWhatsApp()">SEND WHATSAPP</button>
 
 <button class="back" onclick="show('home')">BACK</button>
 
 </div>
 
+<!-- PAYMENT -->
 
 <div id="payment" class="page">
 
 <h3>Payment</h3>
 
-<select id="payCustomer"></select>
+<select id="payCustomer" onchange="loadCustomerBill()"></select>
 
-<input id="billAmt" placeholder="Bill Amount">
+<div id="billInfo"></div>
 
 <input id="recAmt" placeholder="Received Amount">
 
@@ -189,13 +214,13 @@ border-radius:6px
 
 </div>
 
+<!-- SETTINGS -->
 
 <div id="settings" class="page">
 
 <h3>Rates</h3>
 
 <input id="rateP" placeholder="Pickup Rate">
-
 <input id="rateD" placeholder="Delivery Rate">
 
 <button onclick="saveRates()">SAVE RATES</button>
@@ -205,7 +230,6 @@ border-radius:6px
 </div>
 
 </div>
-
 
 <script>
 
@@ -222,9 +246,6 @@ if(p=="settings")loadRates()
 
 }
 
-show("home")
-
-
 function getCustomers(){
 return JSON.parse(localStorage.getItem("customers")||"[]")
 }
@@ -232,7 +253,6 @@ return JSON.parse(localStorage.getItem("customers")||"[]")
 function saveCustomers(c){
 localStorage.setItem("customers",JSON.stringify(c))
 }
-
 
 function saveCustomer(){
 
@@ -259,7 +279,6 @@ loadCustomers()
 
 }
 
-
 function loadCustomers(){
 
 custList.innerHTML=""
@@ -278,20 +297,11 @@ custList.appendChild(d)
 
 }
 
-
 function loadEntry(){
 
 entryDate.value=entryDate.value||new Date().toISOString().split("T")[0]
 
-entryList.innerHTML = `
-<div style="display:grid;grid-template-columns:2fr 1fr 1fr 40px;
-font-weight:bold;margin-bottom:6px">
-<div>Customer</div>
-<div>Morning</div>
-<div>Evening</div>
-<div></div>
-</div>
-`
+entryList.innerHTML=""
 
 let customers=getCustomers()
 
@@ -338,7 +348,6 @@ entryList.appendChild(r)
 
 }
 
-
 function saveEntry(){
 
 let date=entryDate.value
@@ -373,7 +382,6 @@ show("home")
 
 }
 
-
 function loadBilling(){
 
 billCustomer.innerHTML=""
@@ -381,17 +389,18 @@ billCustomer.innerHTML=""
 getCustomers().forEach(c=>{
 
 let o=document.createElement("option")
-
 o.value=c.name
-
 o.textContent=c.name
 
 billCustomer.appendChild(o)
 
 })
 
-}
+billFrom.value=new Date().toISOString().split("T")[0]
 
+billTo.value=new Date().toISOString().split("T")[0]
+
+}
 
 function generateBill(){
 
@@ -399,13 +408,22 @@ let name=billCustomer.value
 
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
+let from=billFrom.value
+let to=billTo.value
+
 let total=0
 
-Object.values(entries).forEach(day=>{
+Object.keys(entries).forEach(d=>{
+
+if(d>=from && d<=to){
+
+let day=entries[d]
 
 if(day[name] && !day[name].c){
 
 total+=day[name].m+day[name].e
+
+}
 
 }
 
@@ -417,27 +435,11 @@ let rate=c.type=="D"?getRateD():getRateP()
 
 let amt=total*rate
 
-window.bill={name,total,rate,amt}
+localStorage.setItem("lastBill_"+name,JSON.stringify({from,to,amt}))
 
 billResult.innerHTML="Milk "+total+" L<br>Total ₹"+amt
 
 }
-
-
-function sendWhatsApp(){
-
-if(!window.bill)return
-
-let msg=`GOPAL GAUSHALA
-Customer: ${bill.name}
-Milk: ${bill.total} L
-Rate: ₹${bill.rate}
-Total: ₹${bill.amt}`
-
-window.open("https://wa.me/?text="+encodeURIComponent(msg))
-
-}
-
 
 function generateAllBills(){
 
@@ -471,20 +473,6 @@ billResult.innerHTML=out
 
 }
 
-
-function sendAllWhatsApp(){
-
-getCustomers().forEach(c=>{
-
-let msg=`Milk bill for ${c.name}`
-
-window.open("https://wa.me/?text="+encodeURIComponent(msg))
-
-})
-
-}
-
-
 function loadPayment(){
 
 payCustomer.innerHTML=""
@@ -492,9 +480,7 @@ payCustomer.innerHTML=""
 getCustomers().forEach(c=>{
 
 let o=document.createElement("option")
-
 o.value=c.name
-
 o.textContent=c.name
 
 payCustomer.appendChild(o)
@@ -503,13 +489,22 @@ payCustomer.appendChild(o)
 
 }
 
+function loadCustomerBill(){
+
+let name=payCustomer.value
+
+let bill=JSON.parse(localStorage.getItem("lastBill_"+name)||"{}")
+
+billInfo.innerHTML="Bill Period : "+bill.from+" → "+bill.to+
+"<br>Bill Amount : ₹"+bill.amt
+
+}
 
 function savePayment(){
 
 alert("Payment Saved")
 
 }
-
 
 function getRateP(){
 return parseFloat(localStorage.getItem("rateP")||90)
@@ -519,20 +514,16 @@ function getRateD(){
 return parseFloat(localStorage.getItem("rateD")||100)
 }
 
-
 function loadRates(){
 
 rateP.value=getRateP()
-
 rateD.value=getRateD()
 
 }
 
-
 function saveRates(){
 
 localStorage.setItem("rateP",rateP.value)
-
 localStorage.setItem("rateD",rateD.value)
 
 alert("Rates Saved")
