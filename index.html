@@ -279,8 +279,8 @@ document.getElementById("payCustomer").innerHTML=html
 
 function loadEntry(){
 
-document.getElementById("entryDate").value=
-new Date().toISOString().split("T")[0]
+document.getElementById("entryDate").value =
+new Date().toISOString().slice(0,10)
 
 let customers=JSON.parse(localStorage.getItem("customers")||"[]")
 
