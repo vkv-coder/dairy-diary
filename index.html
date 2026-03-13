@@ -423,8 +423,12 @@ html+=`<option>${x.name}</option>`
 
 payCustomer.innerHTML=html
 
+if(c.length>0){
+payCustomer.value=c[0].name
+loadBalance()
 }
 
+}
 function loadBalance(){
 
 let name=payCustomer.value
