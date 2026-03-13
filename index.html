@@ -577,10 +577,13 @@ let customers=getCustomers()
 let from=billFrom.value
 let to=billTo.value
 
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let output=""
+
 customers.forEach(c=>{
 
 let name=c.name
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let total=0
 
@@ -611,9 +614,14 @@ let amt=total*rate
 localStorage.setItem("lastBill_"+name,
 JSON.stringify({from:from,to:to,amt:amt}))
 
+output +=
+"<br><b>"+name+"</b>"+
+"<br>Milk : "+total+" L"+
+"<br>Amount : ₹"+amt+"<br>"
+
 })
 
-alert("All Bills Generated")
+billResult.innerHTML=output
 
 }
 </script>
