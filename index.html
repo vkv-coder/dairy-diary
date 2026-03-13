@@ -10,7 +10,7 @@ body{font-family:Arial;margin:0;background:#eef3ff}
 
 .header{
 background:#2f6fd1;
-color:#fff;
+color:white;
 padding:16px;
 text-align:center;
 font-size:22px;
@@ -60,30 +60,37 @@ margin-top:6px
 
 .back{
 background:#444;
-color:#fff;
+color:white;
 width:100%
 }
-
-table{
-width:100%;
-border-collapse:collapse;
-background:#fff
-}
-
-th,td{
-padding:8px;
-border-bottom:1px solid #ccc
-}
-
-th{text-align:left}
 
 .row{
 display:grid;
 grid-template-columns:2fr 1fr 1fr;
 gap:6px;
-background:#fff;
-padding:6px;
-margin-bottom:5px
+background:white;
+padding:8px;
+margin-bottom:6px;
+border-radius:6px
+}
+
+.customerRow{
+display:flex;
+justify-content:space-between;
+background:white;
+padding:8px;
+margin-bottom:6px
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white
+}
+
+th,td{
+padding:8px;
+border-bottom:1px solid #ccc
 }
 
 </style>
@@ -109,6 +116,7 @@ margin-bottom:5px
 </div>
 
 </div>
+
 
 <!-- CUSTOMER MASTER -->
 
@@ -170,6 +178,12 @@ margin-bottom:5px
 
 <h3>Billing</h3>
 
+<select id="billType">
+<option value="ALL">All</option>
+<option value="P">Pickup</option>
+<option value="D">Delivery</option>
+</select>
+
 <select id="billCustomer"></select>
 
 <label>From Date</label>
@@ -179,6 +193,7 @@ margin-bottom:5px
 <input type="date" id="billTo">
 
 <button onclick="generateBill()">GENERATE BILL</button>
+
 <button onclick="generateAllBills()">GENERATE ALL BILLS</button>
 
 <div id="billResult"></div>
@@ -241,6 +256,7 @@ margin-bottom:5px
 <h3>Rates</h3>
 
 <input id="rateP" placeholder="Pickup Rate">
+
 <input id="rateD" placeholder="Delivery Rate">
 
 <button onclick="saveRates()">SAVE RATES</button>
@@ -267,23 +283,26 @@ document.getElementById(p).style.display="block"
 if(p=="master")loadCustomers()
 if(p=="billing")loadBilling()
 if(p=="payment")loadPayment()
-if(p=="ledger"){}
-if(p=="settings")loadRates()
 
 }
 
 
 function getCustomers(){
+
 return JSON.parse(localStorage.getItem("customers")||"[]")
+
 }
+
 
 function saveCustomer(){
 
 let c=getCustomers()
 
 c.push({
+
 name:cname.value,
 type:ctype.value
+
 })
 
 localStorage.setItem("customers",JSON.stringify(c))
@@ -294,15 +313,23 @@ loadCustomers()
 
 }
 
+
 function loadCustomers(){
 
 custList.innerHTML=""
 
-getCustomers().forEach(c=>{
+getCustomers().forEach((c,i)=>{
 
 let d=document.createElement("div")
 
-d.innerText=c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")"
+d.className="customerRow"
+
+d.innerHTML=
+c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+") "+
+"<span>"+
+"<button onclick='editCustomer("+i+")'>Edit</button>"+
+"<button onclick='deleteCustomer("+i+")'>Delete</button>"+
+"</span>"
 
 custList.appendChild(d)
 
@@ -310,6 +337,31 @@ custList.appendChild(d)
 
 }
 
+
+function deleteCustomer(i){
+
+let c=getCustomers()
+
+c.splice(i,1)
+
+localStorage.setItem("customers",JSON.stringify(c))
+
+loadCustomers()
+
+}
+
+
+function editCustomer(i){
+
+let c=getCustomers()[i]
+
+cname.value=c.name
+
+ctype.value=c.type
+
+deleteCustomer(i)
+
+}
 
 
 function loadEntry(){
@@ -329,15 +381,16 @@ r.className="row"
 r.dataset.name=c.name
 
 let name=document.createElement("div")
+
 name.innerText=c.name
 
 let m=document.createElement("input")
+
 m.type="number"
-m.placeholder="Morning"
 
 let e=document.createElement("input")
+
 e.type="number"
-e.placeholder="Evening"
 
 r.append(name,m,e)
 
@@ -346,7 +399,6 @@ entryList.appendChild(r)
 })
 
 }
-
 
 
 function saveEntry(){
@@ -368,6 +420,7 @@ let name=r.dataset.name
 let inputs=r.querySelectorAll("input")
 
 let m=parseFloat(inputs[0].value)||0
+
 let e=parseFloat(inputs[1].value)||0
 
 if(!data[date][name]){
@@ -381,8 +434,11 @@ if(shift=="M")data[date][name].m=m
 if(shift=="E")data[date][name].e=e
 
 if(shift=="B"){
+
 data[date][name].m=m
+
 data[date][name].e=e
+
 }
 
 })
@@ -392,7 +448,6 @@ localStorage.setItem("entries",JSON.stringify(data))
 alert("Entry Saved")
 
 }
-
 
 
 function loadBilling(){
@@ -412,7 +467,6 @@ billCustomer.appendChild(o)
 })
 
 }
-
 
 
 function generateBill(){
@@ -460,7 +514,6 @@ billResult.innerHTML="Bill Amount ₹"+amt
 }
 
 
-
 function generateAllBills(){
 
 getCustomers().forEach(c=>{
@@ -472,7 +525,6 @@ generateBill()
 })
 
 }
-
 
 
 function loadPayment(){
@@ -492,7 +544,6 @@ payCustomer.appendChild(o)
 })
 
 }
-
 
 
 function loadCustomerBill(){
@@ -527,7 +578,6 @@ billInfo.innerHTML=
 }
 
 
-
 function savePayment(){
 
 let name=payCustomer.value
@@ -545,7 +595,6 @@ alert("Payment Saved")
 recAmt.value=""
 
 }
-
 
 
 function loadLedger(){
@@ -615,14 +664,19 @@ ledgerResult.innerHTML=html
 }
 
 
-
 function getRateP(){
+
 return parseFloat(localStorage.getItem("rateP")||90)
+
 }
+
 
 function getRateD(){
+
 return parseFloat(localStorage.getItem("rateD")||100)
+
 }
+
 
 function loadRates(){
 
@@ -631,6 +685,7 @@ rateP.value=getRateP()
 rateD.value=getRateD()
 
 }
+
 
 function saveRates(){
 
@@ -641,7 +696,6 @@ localStorage.setItem("rateD",rateD.value)
 alert("Rates Saved")
 
 }
-
 
 
 function backupData(){
