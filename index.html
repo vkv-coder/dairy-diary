@@ -537,7 +537,41 @@ payCustomer.appendChild(o)
 })
 
 }
+function loadCustomerBill(){
 
+let name=payCustomer.value
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+
+let total=0
+
+Object.keys(entries).forEach(function(d){
+
+let day=entries[d]
+
+if(day[name] && !day[name].c){
+total+=day[name].m+day[name].e
+}
+
+})
+
+let c=getCustomers().find(x=>x.name==name)
+
+let rate=c.type=="D"?100:90
+
+let bill=total*rate
+let paid=payments[name]||0
+let bal=bill-paid
+
+billInfo.innerHTML=
+
+"Milk : "+total+" L<br>"+
+"Bill Amount : ₹"+bill+"<br>"+
+"Paid : ₹"+paid+"<br>"+
+"<b>Balance : ₹"+bal+"</b>"
+
+}
 function savePayment(){
 
 let name=payCustomer.value
