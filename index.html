@@ -520,7 +520,8 @@ total+=day[c.name].m+day[c.name].e
 
 })
 
-let rate=c.type=="D"?100:90
+let rate=c.type=="D"?getRateD():getRateP()
+
 let amt=total*rate
 
 html+=c.name+" | "+total+"L | ₹"+amt+"<br>"
@@ -529,6 +530,7 @@ html+=c.name+" | "+total+"L | ₹"+amt+"<br>"
 
 billResult.innerHTML=html
 
+}
 }
 }
 
