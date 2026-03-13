@@ -568,7 +568,58 @@ localStorage.setItem("rateDelivery",rateDelivery.value)
 
 ratePickup.value=localStorage.getItem("ratePickup")||90
 rateDelivery.value=localStorage.getItem("rateDelivery")||100
+ratePickup.value=localStorage.getItem("ratePickup")||90
+rateDelivery.value=localStorage.getItem("rateDelivery")||100
 
+
+function downloadBackup(){
+
+let data={
+customers:localStorage.getItem("customers"),
+entries:localStorage.getItem("entries"),
+payments:localStorage.getItem("payments"),
+ratePickup:localStorage.getItem("ratePickup"),
+rateDelivery:localStorage.getItem("rateDelivery")
+}
+
+let blob=new Blob([JSON.stringify(data)],{type:"application/json"})
+
+let a=document.createElement("a")
+a.href=URL.createObjectURL(blob)
+a.download="milk_backup.json"
+a.click()
+
+}
+
+
+function restoreBackup(e){
+
+let file=e.target.files[0]
+
+let reader=new FileReader()
+
+reader.onload=function(){
+
+let data=JSON.parse(reader.result)
+
+localStorage.setItem("customers",data.customers)
+localStorage.setItem("entries",data.entries)
+localStorage.setItem("payments",data.payments)
+localStorage.setItem("ratePickup",data.ratePickup)
+localStorage.setItem("rateDelivery",data.rateDelivery)
+
+alert("Backup Restored")
+
+}
+
+reader.readAsText(file)
+
+}
+
+</script>
+
+</body>
+</html>
 </script>
 
 </body>
