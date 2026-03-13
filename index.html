@@ -7,77 +7,16 @@
 <link rel="icon" href="data:,">
 
 <style>
-
-body{
-font-family:Arial;
-background:#eef1f5;
-margin:0;
-}
-
-.header{
-background:#2f69c6;
-color:white;
-text-align:center;
-padding:12px;
-font-size:20px;
-font-weight:bold;
-}
-
-.container{
-padding:15px;
-}
-
-.menu{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
-margin-top:20px;
-}
-
-.menu button{
-padding:18px;
-font-size:16px;
-background:#2f69c6;
-color:yellow;
-border:none;
-border-radius:10px;
-}
-
-input,select{
-width:100%;
-padding:10px;
-margin-top:8px;
-margin-bottom:10px;
-}
-
-button{
-padding:10px;
-border:none;
-border-radius:6px;
-background:#2f69c6;
-color:white;
-}
-
-.back{
-background:#444;
-width:100%;
-margin-top:10px;
-}
-
-.row3{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-gap:5px;
-margin-bottom:5px;
-}
-
-.row5{
-display:grid;
-grid-template-columns:1fr 1fr 1fr 1fr 1fr;
-gap:5px;
-margin-bottom:5px;
-}
-
+body{font-family:Arial;background:#eef1f5;margin:0}
+.header{background:#2f69c6;color:#fff;text-align:center;padding:12px;font-size:20px;font-weight:bold}
+.container{padding:15px;max-width:520px;margin:auto}
+.menu button{display:block;width:100%;padding:14px;margin:8px 0;font-size:16px;background:#2f69c6;color:#fff;border:none;border-radius:6px}
+input,select{width:100%;padding:10px;margin:6px 0}
+button{padding:10px;border:none;border-radius:6px;background:#2f69c6;color:#fff}
+.back{background:#444;width:100%;margin-top:10px}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.smallbtn{padding:6px 8px;font-size:12px;margin-left:5px}
+.table{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;margin-bottom:5px}
 </style>
 </head>
 
@@ -87,69 +26,49 @@ margin-bottom:5px;
 
 <div class="container">
 
-<!-- HOME -->
-
 <div id="home">
-
 <div class="menu">
-
 <button onclick="openPage('entry')">TODAY ENTRY</button>
 <button onclick="openPage('customer')">CUSTOMERS</button>
 <button onclick="openPage('billing')">BILLING</button>
 <button onclick="openPage('payment')">PAYMENT</button>
 <button onclick="openPage('ledger')">LEDGER</button>
-<button onclick="openPage('backup')">BACKUP DATA</button>
 <button onclick="openPage('settings')">SETTINGS</button>
-
 </div>
-
 </div>
 
 <!-- ENTRY -->
-
 <div id="entry" style="display:none">
-
-<h3>Today Entry</h3>
-
+<h3>Daily Entry</h3>
+<input type="date" id="entryDate">
 <button onclick="loadEntry()">LOAD ENTRY</button>
-
 <div id="entryTable"></div>
-
 <button onclick="saveEntry()">SAVE ENTRY</button>
-
 <button class="back" onclick="openPage('home')">BACK</button>
-
 </div>
 
 <!-- CUSTOMER -->
-
 <div id="customer" style="display:none">
-
 <h3>Customer Master</h3>
 
-<input id="custName" placeholder="Customer Name">
-
+<input id="custName" placeholder="Name">
 <input id="custPhone" placeholder="Phone">
-
 <select id="custType">
 <option>Pickup</option>
 <option>Delivery</option>
 </select>
-
-<input id="custMorning" placeholder="Morning Default Qty">
-
-<input id="custEvening" placeholder="Evening Default Qty">
+<input id="custMorning" placeholder="Morning Qty">
+<input id="custEvening" placeholder="Evening Qty">
 
 <button onclick="saveCustomer()">SAVE CUSTOMER</button>
 
-<button class="back" onclick="openPage('home')">BACK</button>
+<div id="custList"></div>
 
+<button class="back" onclick="openPage('home')">BACK</button>
 </div>
 
 <!-- BILLING -->
-
 <div id="billing" style="display:none">
-
 <h3>Billing</h3>
 
 <select id="billType">
@@ -161,9 +80,9 @@ margin-bottom:5px;
 <input type="date" id="billFrom">
 <input type="date" id="billTo">
 
-<button onclick="generateBills()">GENERATE BILL</button>
+<button onclick="generateBills()">GENERATE ALL BILLS</button>
 
-<div class="row5">
+<div class="table">
 <b>Name</b>
 <b>Milk</b>
 <b>Rate</b>
@@ -174,33 +93,25 @@ margin-bottom:5px;
 <div id="billResult"></div>
 
 <button class="back" onclick="openPage('home')">BACK</button>
-
 </div>
 
 <!-- PAYMENT -->
-
 <div id="payment" style="display:none">
-
 <h3>Payment</h3>
 
-<select id="payCustomer" onchange="loadCustomerBalance()"></select>
+<select id="payCustomer" onchange="loadBalance()"></select>
 
-<div id="paySummary"></div>
-
-<input type="date" id="payDate">
+<div id="payInfo"></div>
 
 <input id="payAmount" placeholder="Amount">
 
 <button onclick="savePayment()">SAVE PAYMENT</button>
 
 <button class="back" onclick="openPage('home')">BACK</button>
-
 </div>
 
 <!-- LEDGER -->
-
 <div id="ledger" style="display:none">
-
 <h3>Ledger</h3>
 
 <input type="date" id="ledgerFrom">
@@ -208,50 +119,29 @@ margin-bottom:5px;
 
 <button onclick="loadLedger()">LOAD LEDGER</button>
 
-<div class="row5">
+<div class="table">
 <b>Name</b>
 <b>Milk</b>
+<b>Rate</b>
 <b>Bill</b>
-<b>Paid</b>
 <b>Balance</b>
 </div>
 
 <div id="ledgerResult"></div>
 
 <button class="back" onclick="openPage('home')">BACK</button>
-
-</div>
-
-<!-- BACKUP -->
-
-<div id="backup" style="display:none">
-
-<h3>Backup Data</h3>
-
-<button onclick="exportBackup()">EXPORT BACKUP</button>
-
-<input type="file" onchange="importBackup(event)">
-
-<button class="back" onclick="openPage('home')">BACK</button>
-
 </div>
 
 <!-- SETTINGS -->
-
 <div id="settings" style="display:none">
+<h3>Rates</h3>
 
-<h3>Settings</h3>
+<input id="ratePickup" placeholder="Pickup Rate">
+<input id="rateDelivery" placeholder="Delivery Rate">
 
-Pickup Rate
-<input id="ratePickup">
-
-Delivery Rate
-<input id="rateDelivery">
-
-<button onclick="saveRates()">SAVE RATES</button>
+<button onclick="saveRates()">SAVE</button>
 
 <button class="back" onclick="openPage('home')">BACK</button>
-
 </div>
 
 </div>
@@ -259,14 +149,10 @@ Delivery Rate
 <script>
 
 function openPage(p){
-
-["home","entry","customer","billing","payment","ledger","backup","settings"]
-.forEach(id=>document.getElementById(id).style.display="none")
-
+["home","entry","customer","billing","payment","ledger","settings"].forEach(x=>document.getElementById(x).style.display="none")
 document.getElementById(p).style.display="block"
-
-if(p=="payment") loadPaymentCustomers()
-
+if(p=="customer") loadCustomers()
+if(p=="payment") loadPayCustomers()
 }
 
 function getCustomers(){
@@ -286,56 +172,86 @@ e:Number(custEvening.value||0)
 })
 
 localStorage.setItem("customers",JSON.stringify(c))
+loadCustomers()
 
-alert("Customer Saved")
+}
+
+function loadCustomers(){
+
+let c=getCustomers()
+let html=""
+
+c.forEach((x,i)=>{
+
+html+=`
+<div>
+${x.name} (${x.type})
+<button class="smallbtn" onclick="editCustomer(${i})">Edit</button>
+<button class="smallbtn" onclick="deleteCustomer(${i})">Delete</button>
+</div>
+`
+
+})
+
+custList.innerHTML=html
+
+}
+
+function deleteCustomer(i){
+
+let c=getCustomers()
+c.splice(i,1)
+localStorage.setItem("customers",JSON.stringify(c))
+loadCustomers()
+
+}
+
+function editCustomer(i){
+
+let c=getCustomers()[i]
+
+custName.value=c.name
+custPhone.value=c.phone
+custType.value=c.type
+custMorning.value=c.m
+custEvening.value=c.e
 
 }
 
 function loadEntry(){
 
-let customers=getCustomers()
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let today=new Date().toISOString().slice(0,10)
-
+let c=getCustomers()
 let html=""
 
-customers.forEach(c=>{
-
-let m=c.m
-let e=c.e
-
-if(entries[today] && entries[today][c.name]){
-m=entries[today][c.name].m
-e=entries[today][c.name].e
-}
+c.forEach(x=>{
 
 html+=`
-<div class="row3">
-<div>${c.name}</div>
-<input id="m_${c.name}" value="${m}">
-<input id="e_${c.name}" value="${e}">
+<div class="row">
+<div>${x.name}</div>
+<input type="number" step="0.5" id="m_${x.name}" value="${x.m}">
+<input type="number" step="0.5" id="e_${x.name}" value="${x.e}">
 </div>
 `
+
 })
 
 entryTable.innerHTML=html
+
 }
 
 function saveEntry(){
 
-let customers=getCustomers()
+let c=getCustomers()
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+let date=entryDate.value
 
-let today=new Date().toISOString().slice(0,10)
+if(!entries[date]) entries[date]={}
 
-if(!entries[today]) entries[today]={}
+c.forEach(x=>{
 
-customers.forEach(c=>{
-
-entries[today][c.name]={
-m:Number(document.getElementById("m_"+c.name).value||0),
-e:Number(document.getElementById("e_"+c.name).value||0)
+entries[date][x.name]={
+m:Number(document.getElementById("m_"+x.name).value||0),
+e:Number(document.getElementById("e_"+x.name).value||0)
 }
 
 })
@@ -348,7 +264,7 @@ alert("Saved")
 
 function generateBills(){
 
-let customers=getCustomers()
+let c=getCustomers()
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let from=new Date(billFrom.value)
@@ -358,9 +274,9 @@ let type=billType.value
 
 let html=""
 
-customers.forEach(c=>{
+c.forEach(x=>{
 
-if(type!="All" && c.type!=type) return
+if(type!="All" && x.type!=type) return
 
 let total=0
 
@@ -372,8 +288,8 @@ if(dt>=from && dt<=to){
 
 let day=entries[d]
 
-if(day[c.name]){
-total+=Number(day[c.name].m||0)+Number(day[c.name].e||0)
+if(day[x.name]){
+total+=Number(day[x.name].m||0)+Number(day[x.name].e||0)
 }
 
 }
@@ -382,19 +298,19 @@ total+=Number(day[c.name].m||0)+Number(day[c.name].e||0)
 
 if(total>0){
 
-let rate=c.type=="Pickup"?ratePickup.value:rateDelivery.value
-
+let rate=x.type=="Pickup"?ratePickup.value:rateDelivery.value
 let bill=total*rate
 
 html+=`
-<div class="row5">
-<div>${c.name}</div>
+<div class="table">
+<div>${x.name}</div>
 <div>${total}</div>
 <div>${rate}</div>
 <div>${bill}</div>
 <div></div>
 </div>
 `
+
 }
 
 })
@@ -403,40 +319,39 @@ billResult.innerHTML=html
 
 }
 
-function loadPaymentCustomers(){
+function loadPayCustomers(){
 
-let customers=getCustomers()
+let c=getCustomers()
 
 let html=""
 
-customers.forEach(c=>{
-html+=`<option>${c.name}</option>`
+c.forEach(x=>{
+html+=`<option>${x.name}</option>`
 })
 
 payCustomer.innerHTML=html
 
 }
 
-function loadCustomerBalance(){
+function loadBalance(){
 
 let name=payCustomer.value
 
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 let payments=JSON.parse(localStorage.getItem("payments")||"{}")
 
-let customers=getCustomers()
-
-let c=customers.find(x=>x.name==name)
+let c=getCustomers().find(x=>x.name==name)
 
 let rate=c.type=="Pickup"?ratePickup.value:rateDelivery.value
 
 let total=0
 
 Object.keys(entries).forEach(d=>{
-let day=entries[d]
-if(day[name]){
-total+=Number(day[name].m||0)+Number(day[name].e||0)
+
+if(entries[d][name]){
+total+=Number(entries[d][name].m||0)+Number(entries[d][name].e||0)
 }
+
 })
 
 let bill=total*rate
@@ -449,7 +364,7 @@ if(payments[d][name]) paid+=Number(payments[d][name])
 
 let bal=bill-paid
 
-paySummary.innerHTML=
+payInfo.innerHTML=
 "Milk: "+total+
 "<br>Bill: ₹"+bill+
 "<br>Paid: ₹"+paid+
@@ -460,71 +375,64 @@ paySummary.innerHTML=
 function savePayment(){
 
 let name=payCustomer.value
-let date=payDate.value
 let amt=Number(payAmount.value)
 
 let payments=JSON.parse(localStorage.getItem("payments")||"{}")
 
-if(!payments[date]) payments[date]={}
+let d=new Date().toISOString().slice(0,10)
 
-payments[date][name]=amt
+if(!payments[d]) payments[d]={}
+
+payments[d][name]=amt
 
 localStorage.setItem("payments",JSON.stringify(payments))
 
-alert("Payment Saved")
+alert("Saved")
 
 }
 
 function loadLedger(){
 
-let customers=getCustomers()
+let c=getCustomers()
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
 
 let from=new Date(ledgerFrom.value)
 let to=new Date(ledgerTo.value)
 
 let html=""
 
-customers.forEach(c=>{
+c.forEach(x=>{
 
 let total=0
 
 Object.keys(entries).forEach(d=>{
+
 let dt=new Date(d)
 
 if(dt>=from && dt<=to){
 
 let day=entries[d]
 
-if(day[c.name]){
-total+=Number(day[c.name].m||0)+Number(day[c.name].e||0)
+if(day[x.name]){
+total+=Number(day[x.name].m||0)+Number(day[x.name].e||0)
 }
 
 }
+
 })
 
 if(total>0){
 
-let rate=c.type=="Pickup"?ratePickup.value:rateDelivery.value
-
+let rate=x.type=="Pickup"?ratePickup.value:rateDelivery.value
 let bill=total*rate
 
-let paid=0
-
-Object.keys(payments).forEach(d=>{
-if(payments[d][c.name]) paid+=Number(payments[d][c.name])
-})
-
-let bal=bill-paid
-
 html+=`
-<div class="row5">
-<div>${c.name}</div>
+<div class="table">
+<div>${x.name}</div>
 <div>${total}</div>
+<div>${rate}</div>
 <div>${bill}</div>
-<div>${paid}</div>
-<div>${bal}</div>
+<div>${bill}</div>
 </div>
 `
 
@@ -532,7 +440,7 @@ html+=`
 
 })
 
-ledgerResult.innerHTML=html||"No records"
+ledgerResult.innerHTML=html
 
 }
 
@@ -541,56 +449,10 @@ function saveRates(){
 localStorage.setItem("ratePickup",ratePickup.value)
 localStorage.setItem("rateDelivery",rateDelivery.value)
 
-alert("Rates Saved")
-
 }
 
 ratePickup.value=localStorage.getItem("ratePickup")||90
 rateDelivery.value=localStorage.getItem("rateDelivery")||100
-
-function exportBackup(){
-
-let data={
-customers:localStorage.getItem("customers"),
-entries:localStorage.getItem("entries"),
-payments:localStorage.getItem("payments"),
-ratePickup:ratePickup.value,
-rateDelivery:rateDelivery.value
-}
-
-let blob=new Blob([JSON.stringify(data)],{type:"application/json"})
-
-let a=document.createElement("a")
-a.href=URL.createObjectURL(blob)
-a.download="gaushala-backup.json"
-a.click()
-
-}
-
-function importBackup(e){
-
-let file=e.target.files[0]
-
-let reader=new FileReader()
-
-reader.onload=function(){
-
-let data=JSON.parse(reader.result)
-
-localStorage.setItem("customers",data.customers)
-localStorage.setItem("entries",data.entries)
-localStorage.setItem("payments",data.payments)
-
-localStorage.setItem("ratePickup",data.ratePickup)
-localStorage.setItem("rateDelivery",data.rateDelivery)
-
-alert("Backup Restored")
-
-}
-
-reader.readAsText(file)
-
-}
 
 </script>
 
