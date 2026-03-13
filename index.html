@@ -311,10 +311,20 @@ customers.forEach((c,i)=>{
 
 let d=document.createElement("div")
 
+d.style.display="flex"
+d.style.justifyContent="space-between"
+d.style.alignItems="center"
+d.style.background="white"
+d.style.padding="8px"
+d.style.marginBottom="6px"
+d.style.borderRadius="8px"
+
 d.innerHTML =
-c.name + " ("+(c.type=="D"?"Delivery":"Pickup")+") " +
-"<button onclick='editCustomer("+i+")'>Edit</button> " +
-"<button onclick='deleteCustomer("+i+")'>Delete</button>"
+"<span>"+c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")</span>"+
+"<span>"+
+"<button style='width:auto;margin-right:5px' onclick='editCustomer("+i+")'>Edit</button>"+
+"<button style='width:auto;background:red;color:white' onclick='deleteCustomer("+i+")'>Delete</button>"+
+"</span>"
 
 custList.appendChild(d)
 
