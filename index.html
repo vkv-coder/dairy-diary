@@ -564,7 +564,7 @@ let customers=getCustomers()
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 let payments=JSON.parse(localStorage.getItem("payments")||"{}")
 
-let html="<b>Name | Milk | Bill | Paid | Balance</b><br><br>"
+let html="<b>Name&nbsp;&nbsp;&nbsp;Milk&nbsp;&nbsp;&nbsp;Bill&nbsp;&nbsp;&nbsp;Paid&nbsp;&nbsp;&nbsp;Balance</b><br><br>"
 
 customers.forEach(function(c){
 
@@ -581,14 +581,14 @@ total+=day[c.name].m+day[c.name].e
 })
 
 let rate=c.type=="D"?100:90
-
 let bill=total*rate
-
 let paid=payments[c.name]||0
-
 let bal=bill-paid
 
-html+=c.name+" | "+total+"L | ₹"+bill+" | ₹"+paid+" | ₹"+bal+"<br>"
+html+=c.name+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
+total+"L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;₹"+bill+
+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;₹"+paid+
+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;₹"+bal+"<br><br>"
 
 })
 
