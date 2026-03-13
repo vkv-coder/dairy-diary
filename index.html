@@ -458,14 +458,81 @@ billCustomer.appendChild(o)
 function generateBill(){
 
 let name=billCustomer.value
+let from=billFrom.value
+let to=billTo.value
 
-billResult.innerHTML="Bill generated for "+name
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let total=0
+
+Object.keys(entries).forEach(d=>{
+
+if(d>=from && d<=to){
+
+let day=entries[d]
+
+if(day[name] && !day[name].c){
+total+=day[name].m+day[name].e
+}
 
 }
 
+})
+
+let customers=getCustomers()
+
+let c=customers.find(x=>x.name==name)
+
+let rate=c.type=="D"?100:90
+
+let amt=total*rate
+
+billResult.innerHTML=
+"Customer : "+name+
+"<br>Milk : "+total+" L"+
+"<br>Rate : ₹"+rate+
+"<br><b>Total Bill : ₹"+amt+"</b>"
+
+}
 function generateAllBills(){
 
-billResult.innerHTML="All bills generated"
+let customers=getCustomers()
+
+let from=billFrom.value
+let to=billTo.value
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let output=""
+
+customers.forEach(c=>{
+
+let name=c.name
+let total=0
+
+Object.keys(entries).forEach(d=>{
+
+if(d>=from && d<=to){
+
+let day=entries[d]
+
+if(day[name] && !day[name].c){
+total+=day[name].m+day[name].e
+}
+
+}
+
+})
+
+let rate=c.type=="D"?100:90
+
+let amt=total*rate
+
+output+=name+" → "+total+" L → ₹"+amt+"<br>"
+
+})
+
+billResult.innerHTML=output
 
 }
 
