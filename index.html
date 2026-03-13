@@ -51,19 +51,19 @@ margin-bottom:10px
 }
 
 button{
-width:100%;
-padding:12px;
-font-size:16px;
+padding:10px;
+font-size:15px;
 background:#2f6fd1;
 color:yellow;
 border:none;
-border-radius:8px;
-margin-top:6px
+border-radius:6px;
+margin-top:4px
 }
 
 .back{
 background:#444;
-color:white
+color:white;
+width:100%;
 }
 
 .row{
@@ -95,6 +95,24 @@ opacity:0.4;
 background:#ffe6e6;
 }
 
+.customerRow{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:white;
+padding:8px;
+margin-bottom:6px;
+border-radius:8px
+}
+
+.ledgerRow{
+background:white;
+padding:6px;
+margin-bottom:4px;
+border-radius:6px;
+font-size:14px
+}
+
 </style>
 
 </head>
@@ -115,6 +133,7 @@ background:#ffe6e6;
 <button onclick="show('payment')">💰 PAYMENT</button>
 <button onclick="show('ledger')">📊 LEDGER</button>
 <button onclick="show('settings')">⚙ SETTINGS</button>
+
 </div>
 
 </div>
@@ -190,11 +209,10 @@ background:#ffe6e6;
 <input type="date" id="billTo">
 
 <button onclick="generateBill()">GENERATE BILL</button>
+
 <button onclick="generateAllBills()">GENERATE ALL BILLS</button>
 
 <div id="billResult"></div>
-
-<button onclick="sendWhatsApp()">SEND WHATSAPP</button>
 
 <button class="back" onclick="show('home')">BACK</button>
 
@@ -217,7 +235,6 @@ background:#ffe6e6;
 <button class="back" onclick="show('home')">BACK</button>
 
 </div>
-</div>
 
 <!-- LEDGER -->
 
@@ -225,13 +242,18 @@ background:#ffe6e6;
 
 <h3>Customer Ledger</h3>
 
-<select id="ledgerCustomer" onchange="loadLedger()"></select>
+<select id="ledgerType" onchange="loadLedgerCustomers()">
+<option value="ALL">All Customers</option>
+<option value="P">Pickup</option>
+<option value="D">Delivery</option>
+</select>
 
 <div id="ledgerResult"></div>
 
 <button class="back" onclick="show('home')">BACK</button>
 
 </div>
+
 <!-- SETTINGS -->
 
 <div id="settings" class="page">
@@ -254,18 +276,19 @@ background:#ffe6e6;
 function show(p){
 
 document.querySelectorAll(".page").forEach(x=>x.style.display="none")
+
 document.getElementById(p).style.display="block"
 
 if(p=="entry"){
 entryDate.value=new Date().toISOString().split("T")[0]
-loadEntry()
 }
 
 if(p=="master")loadCustomers()
 if(p=="billing")loadBilling()
 if(p=="payment")loadPayment()
-if(p=="settings")loadRates()
 if(p=="ledger")loadLedgerCustomers()
+if(p=="settings")loadRates()
+
 }
 
 function getCustomers(){
@@ -284,437 +307,5 @@ c.push({
 name:cname.value,
 p1:phone1.value,
 p2:phone2.value,
-type:ctype.value,
-m:parseFloat(stdM.value)||0,
-e:parseFloat(stdE.value)||0
-})
-
-saveCustomers(c)
-
-cname.value=""
-phone1.value=""
-phone2.value=""
-stdM.value=""
-stdE.value=""
-
-loadCustomers()
-
-}
-
-function loadCustomers(){
-
-custList.innerHTML=""
-
-let customers = getCustomers()
-
-customers.forEach((c,i)=>{
-
-let d=document.createElement("div")
-
-d.style.display="flex"
-d.style.justifyContent="space-between"
-d.style.alignItems="center"
-d.style.background="white"
-d.style.padding="8px"
-d.style.marginBottom="6px"
-d.style.borderRadius="8px"
-
-d.innerHTML =
-"<span>"+c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")</span>"+
-"<span>"+
-"<button style='width:auto;margin-right:5px' onclick='editCustomer("+i+")'>Edit</button>"+
-"<button style='width:auto;background:red;color:white' onclick='deleteCustomer("+i+")'>Delete</button>"+
-"</span>"
-
-custList.appendChild(d)
-
-})
-
-}
-  function deleteCustomer(i){
-
-let customers = getCustomers()
-
-customers.splice(i,1)
-
-saveCustomers(customers)
-
-loadCustomers()
-
-}
-
-function editCustomer(i){
-
-let c = getCustomers()[i]
-
-cname.value = c.name
-phone1.value = c.p1
-phone2.value = c.p2
-ctype.value = c.type
-stdM.value = c.m
-stdE.value = c.e
-
-deleteCustomer(i)
-
-}
-function loadEntry(){
-
-entryList.innerHTML=""
-
-let customers=getCustomers()
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-let date=entryDate.value
-
-customers.filter(c=>c.type==entryType.value).forEach(c=>{
-
-let r=document.createElement("div")
-r.className="row"
-r.dataset.name=c.name
-
-let m=c.m
-let e=c.e
-
-if(entries[date] && entries[date][c.name]){
-
-m=entries[date][c.name].m
-e=entries[date][c.name].e
-
-}
-
-let mInput=document.createElement("input")
-mInput.type="number"
-mInput.step="0.5"
-mInput.min="0"
-mInput.value=m
-
-let eInput=document.createElement("input")
-eInput.type="number"
-eInput.step="0.5"
-eInput.min="0"
-eInput.value=e
-
-let cancel=document.createElement("button")
-cancel.className="cancel"
-cancel.innerText="X"
-cancel.onclick=()=>r.classList.toggle("cancelled")
-
-let cname=document.createElement("div")
-cname.innerText=c.name
-
-r.append(cname,mInput,eInput,cancel)
-
-entryList.appendChild(r)
-
-})
-
-}
-
-function saveEntry(){
-
-let date=entryDate.value
-
-let rows=document.querySelectorAll("#entryList .row")
-
-let data=JSON.parse(localStorage.getItem("entries")||"{}")
-
-if(!data[date])data[date]={}
-
-rows.forEach(r=>{
-
-let name=r.dataset.name
-
-let inputs=r.querySelectorAll("input")
-
-data[date][name]={
-
-m:parseFloat(inputs[0].value)||0,
-e:parseFloat(inputs[1].value)||0,
-c:r.classList.contains("cancelled")
-
-}
-
-})
-
-localStorage.setItem("entries",JSON.stringify(data))
-
-alert("Entry Saved")
-
-show("home")
-
-}
-
-function loadBilling(){
-
-billCustomer.innerHTML=""
-
-getCustomers().forEach(c=>{
-
-let o=document.createElement("option")
-o.value=c.name
-o.textContent=c.name
-
-billCustomer.appendChild(o)
-
-})
-
-}
-
-function generateBill(){
-
-let name=billCustomer.value
-let from=billFrom.value
-let to=billTo.value
-
-if(!from || !to){
-alert("Select From and To Date")
-return
-}
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let total=0
-let mTotal=0
-let eTotal=0
-
-Object.keys(entries).forEach(d=>{
-
-let dDate=new Date(d)
-let fDate=new Date(from)
-let tDate=new Date(to)
-
-if(dDate>=fDate && dDate<=tDate){
-
-let day=entries[d]
-
-if(day[name] && !day[name].c){
-
-mTotal+=day[name].m
-eTotal+=day[name].e
-total+=day[name].m+day[name].e
-
-}
-
-}
-
-})
-
-let c=getCustomers().find(x=>x.name==name)
-
-let rate=c.type=="D"?getRateD():getRateP()
-
-let amt=total*rate
-
-localStorage.setItem("lastBill_"+name,
-JSON.stringify({from:from,to:to,amt:amt}))
-
-billResult.innerHTML=
-"Customer : "+name+
-"<br>Period : "+from+" → "+to+
-"<br>Morning Milk : "+mTotal+" L"+
-"<br>Evening Milk : "+eTotal+" L"+
-"<br>Total Milk : "+total+" L"+
-"<br>Rate : ₹"+rate+
-"<br><b>Total : ₹"+amt+"</b>"
-
-}
-
-function loadPayment(){
-
-payCustomer.innerHTML=""
-
-getCustomers().forEach(c=>{
-
-let o=document.createElement("option")
-o.value=c.name
-o.textContent=c.name
-
-payCustomer.appendChild(o)
-
-})
-
-loadCustomerBill()
-
-}
-
-function loadCustomerBill(){
-
-let name=payCustomer.value
-
-let bill=JSON.parse(localStorage.getItem("lastBill_"+name)||"{}")
-
-if(!bill.amt){
-billInfo.innerHTML="No Bill Generated"
-return
-}
-
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-
-let paid=payments[name]||0
-
-let bal=bill.amt-paid
-
-billInfo.innerHTML=
-"Bill Period : "+bill.from+" → "+bill.to+
-"<br>Bill Amount : ₹"+bill.amt+
-"<br>Received : ₹"+paid+
-"<br><b>Balance : ₹"+bal+"</b>"
-
-}
-
-function savePayment(){
-
-let name=payCustomer.value
-let amt=parseFloat(recAmt.value)||0
-
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-
-if(!payments[name])payments[name]=0
-
-payments[name]+=amt
-
-localStorage.setItem("payments",JSON.stringify(payments))
-
-alert("Payment Saved")
-
-recAmt.value=""
-
-}
-
-function getRateP(){
-return parseFloat(localStorage.getItem("rateP")||90)
-}
-
-function getRateD(){
-return parseFloat(localStorage.getItem("rateD")||100)
-}
-
-function loadRates(){
-
-rateP.value=getRateP()
-rateD.value=getRateD()
-
-}
-
-function saveRates(){
-
-localStorage.setItem("rateP",rateP.value)
-localStorage.setItem("rateD",rateD.value)
-
-alert("Rates Saved")
-
-}
-
-
-function sendWhatsApp(){
-
-alert("WhatsApp feature next step")
-
-}
-
-function generateAllBills(){
-
-let customers=getCustomers()
-
-let from=billFrom.value
-let to=billTo.value
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let output=""
-
-customers.forEach(c=>{
-
-let name=c.name
-
-let total=0
-
-Object.keys(entries).forEach(d=>{
-
-let dDate=new Date(d)
-let fDate=new Date(from)
-let tDate=new Date(to)
-
-if(dDate>=fDate && dDate<=tDate){
-
-let day=entries[d]
-
-if(day[name] && !day[name].c){
-
-total+=day[name].m+day[name].e
-
-}
-
-}
-
-})
-
-let rate=c.type=="D"?getRateD():getRateP()
-
-let amt=total*rate
-
-localStorage.setItem("lastBill_"+name,
-JSON.stringify({from:from,to:to,amt:amt}))
-
-output +=
-"<br><b>"+name+"</b>"+
-"<br>Milk : "+total+" L"+
-"<br>Amount : ₹"+amt+"<br>"
-
-})
-
-billResult.innerHTML=output
-
-}
-  function loadLedgerCustomers(){
-
-let customers = getCustomers()
-
-let entries = JSON.parse(localStorage.getItem("entries") || "{}")
-let payments = JSON.parse(localStorage.getItem("payments") || "{}")
-
-let html = ""
-
-customers.forEach(c => {
-
-let name = c.name
-let totalMilk = 0
-
-Object.keys(entries).forEach(d => {
-
-let day = entries[d]
-
-if(day[name] && !day[name].c){
-
-totalMilk += day[name].m + day[name].e
-
-}
-
-})
-
-let rate = c.type=="D" ? getRateD() : getRateP()
-
-let bill = totalMilk * rate
-
-let paid = payments[name] || 0
-
-let bal = bill - paid
-
-html +=
-"<div style='background:white;padding:10px;margin-bottom:8px;border-radius:8px'>" +
-"<b>"+name+"</b> ("+(c.type=="D"?"Delivery":"Pickup")+")<br>" +
-"Milk : "+totalMilk+" L<br>" +
-"Bill : ₹"+bill+"<br>" +
-"Paid : ₹"+paid+"<br>" +
-"<b>Balance : ₹"+bal+"</b>" +
-"</div>"
-
-})
-
-ledgerResult.innerHTML = html
-
-}
-</script>
-
-</body>
-</html>
+t
 ```
