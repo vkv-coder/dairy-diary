@@ -231,14 +231,10 @@ function show(p){
 
 document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 
-document.getElementById(p).style.display="block"
+let page = document.getElementById(p)
 
-if(p=="entry"){
-entryDate.value=new Date().toISOString().split("T")[0]
-}
-
-if(p=="master")loadCustomers()
-
+if(page){
+page.style.display="block"
 }
 
 function getCustomers(){
