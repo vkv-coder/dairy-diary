@@ -95,6 +95,21 @@ opacity:0.4;
 background:#ffe6e6;
 }
 
+.customerRow{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:white;
+padding:8px;
+margin-bottom:6px;
+border-radius:8px
+}
+
+.customerRow button{
+width:auto;
+margin-left:6px
+}
+
 </style>
 
 </head>
@@ -113,6 +128,7 @@ background:#ffe6e6;
 <button onclick="show('master')">CUSTOMERS</button>
 <button onclick="show('billing')">BILLING</button>
 <button onclick="show('payment')">PAYMENT</button>
+<button onclick="show('ledger')">LEDGER</button>
 <button onclick="show('settings')">SETTINGS</button>
 
 </div>
@@ -126,7 +142,6 @@ background:#ffe6e6;
 <h3>Customer Master</h3>
 
 <input id="cname" placeholder="Customer Name">
-
 <input id="phone1" placeholder="Phone 1">
 <input id="phone2" placeholder="Phone 2">
 
@@ -176,6 +191,38 @@ background:#ffe6e6;
 
 </div>
 
+<!-- BILLING -->
+
+<div id="billing" class="page">
+<h3>Billing</h3>
+<p>Billing page</p>
+<button class="back" onclick="show('home')">BACK</button>
+</div>
+
+<!-- PAYMENT -->
+
+<div id="payment" class="page">
+<h3>Payment</h3>
+<p>Payment page</p>
+<button class="back" onclick="show('home')">BACK</button>
+</div>
+
+<!-- LEDGER -->
+
+<div id="ledger" class="page">
+<h3>Ledger</h3>
+<p>Ledger page</p>
+<button class="back" onclick="show('home')">BACK</button>
+</div>
+
+<!-- SETTINGS -->
+
+<div id="settings" class="page">
+<h3>Settings</h3>
+<p>Settings page</p>
+<button class="back" onclick="show('home')">BACK</button>
+</div>
+
 </div>
 
 <script>
@@ -184,21 +231,16 @@ function show(p){
 
 document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 
-let page=document.getElementById(p)
-
-if(page){
-page.style.display="block"
-}
+document.getElementById(p).style.display="block"
 
 if(p=="entry"){
 entryDate.value=new Date().toISOString().split("T")[0]
 }
 
-if(p=="master"){
-loadCustomers()
-}
+if(p=="master")loadCustomers()
 
 }
+
 function getCustomers(){
 return JSON.parse(localStorage.getItem("customers")||"[]")
 }
@@ -236,14 +278,50 @@ function loadCustomers(){
 
 custList.innerHTML=""
 
-getCustomers().forEach(c=>{
+let customers=getCustomers()
+
+customers.forEach((c,i)=>{
 
 let d=document.createElement("div")
-d.innerText=c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")"
+d.className="customerRow"
+
+d.innerHTML=
+"<span>"+c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")</span>"+
+"<span>"+
+"<button onclick='editCustomer("+i+")'>Edit</button>"+
+"<button style='background:red;color:white' onclick='deleteCustomer("+i+")'>Delete</button>"+
+"</span>"
 
 custList.appendChild(d)
 
 })
+
+}
+
+function deleteCustomer(i){
+
+let customers=getCustomers()
+
+customers.splice(i,1)
+
+saveCustomers(customers)
+
+loadCustomers()
+
+}
+
+function editCustomer(i){
+
+let c=getCustomers()[i]
+
+cname.value=c.name
+phone1.value=c.p1
+phone2.value=c.p2
+ctype.value=c.type
+stdM.value=c.m
+stdE.value=c.e
+
+deleteCustomer(i)
 
 }
 
@@ -252,24 +330,16 @@ function loadEntry(){
 entryList.innerHTML=""
 
 let customers=getCustomers()
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-let date=entryDate.value
 
 customers.forEach(c=>{
 
-if(c.type!=entryType.value) return
+if(c.type!=entryType.value)return
 
 let r=document.createElement("div")
+
 r.className="row"
+
 r.dataset.name=c.name
-
-let m=c.m
-let e=c.e
-
-if(entries[date] && entries[date][c.name]){
-m=entries[date][c.name].m
-e=entries[date][c.name].e
-}
 
 let cname=document.createElement("div")
 cname.innerText=c.name
@@ -277,17 +347,17 @@ cname.innerText=c.name
 let mInput=document.createElement("input")
 mInput.type="number"
 mInput.step="0.5"
-mInput.value=m
+mInput.value=c.m
 
 let eInput=document.createElement("input")
 eInput.type="number"
 eInput.step="0.5"
-eInput.value=e
+eInput.value=c.e
 
 let cancel=document.createElement("button")
+cancel.type="button"
 cancel.className="cancel"
 cancel.innerText="X"
-cancel.type="button"   // IMPORTANT
 cancel.onclick=()=>r.classList.toggle("cancelled")
 
 r.append(cname,mInput,eInput,cancel)
