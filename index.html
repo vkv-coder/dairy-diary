@@ -513,7 +513,7 @@ total+=day[c.name].m+day[c.name].e
 
 let rate=c.type=="D"?100:90
 let amt=total*rate
-
+if(total>0){
 html+=c.name+" | "+total+"L | ₹"+amt+"<br>"
 
 })
