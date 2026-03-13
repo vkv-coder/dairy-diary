@@ -83,18 +83,6 @@ font-weight:bold;
 margin-bottom:5px
 }
 
-.cancel{
-background:red;
-color:white;
-border:none;
-border-radius:6px
-}
-
-.cancelled{
-opacity:0.4;
-background:#ffe6e6;
-}
-
 .customerRow{
 display:flex;
 justify-content:space-between;
@@ -108,6 +96,18 @@ border-radius:8px
 .customerRow button{
 width:auto;
 margin-left:6px
+}
+
+.cancel{
+background:red;
+color:white;
+border:none;
+border-radius:6px
+}
+
+.cancelled{
+opacity:0.4;
+background:#ffe6e6;
 }
 
 </style>
@@ -194,33 +194,67 @@ margin-left:6px
 <!-- BILLING -->
 
 <div id="billing" class="page">
+
 <h3>Billing</h3>
-<p>Billing page</p>
+
+<select id="billCustomer"></select>
+
+<label>From Date</label>
+<input type="date" id="billFrom">
+
+<label>To Date</label>
+<input type="date" id="billTo">
+
+<button onclick="generateBill()">GENERATE BILL</button>
+<button onclick="generateAllBills()">GENERATE ALL BILLS</button>
+
+<div id="billResult"></div>
+
 <button class="back" onclick="show('home')">BACK</button>
+
 </div>
 
 <!-- PAYMENT -->
 
 <div id="payment" class="page">
+
 <h3>Payment</h3>
-<p>Payment page</p>
+
+<select id="payCustomer"></select>
+
+<input id="recAmt" placeholder="Received Amount">
+
+<button onclick="savePayment()">SAVE PAYMENT</button>
+
 <button class="back" onclick="show('home')">BACK</button>
+
 </div>
 
 <!-- LEDGER -->
 
 <div id="ledger" class="page">
+
 <h3>Ledger</h3>
-<p>Ledger page</p>
+
+<div id="ledgerResult"></div>
+
 <button class="back" onclick="show('home')">BACK</button>
+
 </div>
 
 <!-- SETTINGS -->
 
 <div id="settings" class="page">
-<h3>Settings</h3>
-<p>Settings page</p>
+
+<h3>Rates</h3>
+
+<input id="rateP" placeholder="Pickup Rate">
+<input id="rateD" placeholder="Delivery Rate">
+
+<button onclick="saveRates()">SAVE RATES</button>
+
 <button class="back" onclick="show('home')">BACK</button>
+
 </div>
 
 </div>
@@ -231,10 +265,19 @@ function show(p){
 
 document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 
-let page = document.getElementById(p)
+let page=document.getElementById(p)
 
-if(page){
-page.style.display="block"
+if(page) page.style.display="block"
+
+if(p=="entry"){
+entryDate.value=new Date().toISOString().split("T")[0]
+}
+
+if(p=="master")loadCustomers()
+if(p=="billing")loadBilling()
+if(p=="payment")loadPayment()
+if(p=="ledger")loadLedger()
+
 }
 
 function getCustomers(){
@@ -332,9 +375,7 @@ customers.forEach(c=>{
 if(c.type!=entryType.value)return
 
 let r=document.createElement("div")
-
 r.className="row"
-
 r.dataset.name=c.name
 
 let cname=document.createElement("div")
@@ -395,6 +436,73 @@ localStorage.setItem("entries",JSON.stringify(data))
 alert("Entry Saved")
 
 show("home")
+
+}
+
+function loadBilling(){
+
+billCustomer.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let o=document.createElement("option")
+o.value=c.name
+o.textContent=c.name
+
+billCustomer.appendChild(o)
+
+})
+
+}
+
+function generateBill(){
+
+let name=billCustomer.value
+
+billResult.innerHTML="Bill generated for "+name
+
+}
+
+function generateAllBills(){
+
+billResult.innerHTML="All bills generated"
+
+}
+
+function loadPayment(){
+
+payCustomer.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let o=document.createElement("option")
+o.value=c.name
+o.textContent=c.name
+
+payCustomer.appendChild(o)
+
+})
+
+}
+
+function savePayment(){
+
+alert("Payment saved")
+
+}
+
+function loadLedger(){
+
+ledgerResult.innerHTML="Ledger summary"
+
+}
+
+function saveRates(){
+
+localStorage.setItem("rateP",rateP.value)
+localStorage.setItem("rateD",rateD.value)
+
+alert("Rates saved")
 
 }
 
