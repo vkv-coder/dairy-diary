@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>Gopal Gaushala</title>
 
 <style>
@@ -69,7 +67,7 @@ width:100%
 table{
 width:100%;
 border-collapse:collapse;
-background:white
+background:#fff
 }
 
 th,td{
@@ -79,8 +77,16 @@ border-bottom:1px solid #ccc
 
 th{text-align:left}
 
-</style>
+.row{
+display:grid;
+grid-template-columns:2fr 1fr 1fr;
+gap:6px;
+background:#fff;
+padding:6px;
+margin-bottom:5px
+}
 
+</style>
 </head>
 
 <body>
@@ -94,21 +100,17 @@ th{text-align:left}
 <div class="menu">
 
 <button onclick="show('entry')">TODAY ENTRY</button>
-
 <button onclick="show('master')">CUSTOMERS</button>
-
 <button onclick="show('billing')">BILLING</button>
-
 <button onclick="show('payment')">PAYMENT</button>
-
 <button onclick="show('ledger')">LEDGER</button>
-
 <button onclick="show('settings')">SETTINGS</button>
 
 </div>
 
 </div>
 
+<!-- CUSTOMER MASTER -->
 
 <div id="master" class="page">
 
@@ -130,6 +132,8 @@ th{text-align:left}
 </div>
 
 
+<!-- ENTRY -->
+
 <div id="entry" class="page">
 
 <h3>Daily Entry</h3>
@@ -139,6 +143,14 @@ th{text-align:left}
 <select id="entryType">
 <option value="P">Pickup</option>
 <option value="D">Delivery</option>
+</select>
+
+<label>Entry Mode</label>
+
+<select id="entryShift">
+<option value="M">Morning</option>
+<option value="E">Evening</option>
+<option value="B">Both</option>
 </select>
 
 <button onclick="loadEntry()">LOAD ENTRY</button>
@@ -151,6 +163,8 @@ th{text-align:left}
 
 </div>
 
+
+<!-- BILLING -->
 
 <div id="billing" class="page">
 
@@ -165,7 +179,6 @@ th{text-align:left}
 <input type="date" id="billTo">
 
 <button onclick="generateBill()">GENERATE BILL</button>
-
 <button onclick="generateAllBills()">GENERATE ALL BILLS</button>
 
 <div id="billResult"></div>
@@ -175,11 +188,15 @@ th{text-align:left}
 </div>
 
 
+<!-- PAYMENT -->
+
 <div id="payment" class="page">
 
 <h3>Payment</h3>
 
-<select id="payCustomer"></select>
+<select id="payCustomer" onchange="loadCustomerBill()"></select>
+
+<div id="billInfo"></div>
 
 <input id="recAmt" placeholder="Received Amount">
 
@@ -189,6 +206,8 @@ th{text-align:left}
 
 </div>
 
+
+<!-- LEDGER -->
 
 <div id="ledger" class="page">
 
@@ -214,6 +233,29 @@ th{text-align:left}
 
 </div>
 
+
+<!-- SETTINGS -->
+
+<div id="settings" class="page">
+
+<h3>Rates</h3>
+
+<input id="rateP" placeholder="Pickup Rate">
+<input id="rateD" placeholder="Delivery Rate">
+
+<button onclick="saveRates()">SAVE RATES</button>
+
+<h3>Backup</h3>
+
+<button onclick="backupData()">BACKUP DATA</button>
+
+<button class="back" onclick="show('home')">BACK</button>
+
+</div>
+
+</div>
+
+
 <script>
 
 function show(p){
@@ -223,37 +265,25 @@ document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 document.getElementById(p).style.display="block"
 
 if(p=="master")loadCustomers()
-
 if(p=="billing")loadBilling()
-
 if(p=="payment")loadPayment()
-
-if(p=="ledger")loadLedger()
-
+if(p=="ledger"){}
 if(p=="settings")loadRates()
 
 }
 
 
-
 function getCustomers(){
-
 return JSON.parse(localStorage.getItem("customers")||"[]")
-
 }
-
-
 
 function saveCustomer(){
 
 let c=getCustomers()
 
 c.push({
-
 name:cname.value,
-
 type:ctype.value
-
 })
 
 localStorage.setItem("customers",JSON.stringify(c))
@@ -264,21 +294,102 @@ loadCustomers()
 
 }
 
-
-
 function loadCustomers(){
 
 custList.innerHTML=""
 
-getCustomers().forEach((c,i)=>{
+getCustomers().forEach(c=>{
 
 let d=document.createElement("div")
 
-d.innerHTML=c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")"
+d.innerText=c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")"
 
 custList.appendChild(d)
 
 })
+
+}
+
+
+
+function loadEntry(){
+
+entryList.innerHTML=""
+
+let customers=getCustomers()
+
+customers.forEach(c=>{
+
+if(c.type!=entryType.value)return
+
+let r=document.createElement("div")
+
+r.className="row"
+
+r.dataset.name=c.name
+
+let name=document.createElement("div")
+name.innerText=c.name
+
+let m=document.createElement("input")
+m.type="number"
+m.placeholder="Morning"
+
+let e=document.createElement("input")
+e.type="number"
+e.placeholder="Evening"
+
+r.append(name,m,e)
+
+entryList.appendChild(r)
+
+})
+
+}
+
+
+
+function saveEntry(){
+
+let date=entryDate.value
+
+let rows=document.querySelectorAll("#entryList .row")
+
+let data=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let shift=entryShift.value
+
+if(!data[date])data[date]={}
+
+rows.forEach(r=>{
+
+let name=r.dataset.name
+
+let inputs=r.querySelectorAll("input")
+
+let m=parseFloat(inputs[0].value)||0
+let e=parseFloat(inputs[1].value)||0
+
+if(!data[date][name]){
+
+data[date][name]={m:0,e:0}
+
+}
+
+if(shift=="M")data[date][name].m=m
+
+if(shift=="E")data[date][name].e=e
+
+if(shift=="B"){
+data[date][name].m=m
+data[date][name].e=e
+}
+
+})
+
+localStorage.setItem("entries",JSON.stringify(data))
+
+alert("Entry Saved")
 
 }
 
@@ -322,7 +433,7 @@ if(d>=from && d<=to){
 
 let day=entries[d]
 
-if(day[name] && !day[name].c){
+if(day[name]){
 
 total+=day[name].m+day[name].e
 
@@ -384,6 +495,39 @@ payCustomer.appendChild(o)
 
 
 
+function loadCustomerBill(){
+
+let name=payCustomer.value
+
+let bills=JSON.parse(localStorage.getItem("bills")||"{}")
+
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+
+let b=bills[name]
+
+if(!b){
+
+billInfo.innerHTML="No bill generated"
+
+return
+
+}
+
+let paid=payments[name]||0
+
+let bal=b.amt-paid
+
+billInfo.innerHTML=
+
+"Bill Period : "+b.from+" → "+b.to+
+"<br>Bill Amount : ₹"+b.amt+
+"<br>Paid : ₹"+paid+
+"<br><b>Balance : ₹"+bal+"</b>"
+
+}
+
+
+
 function savePayment(){
 
 let name=payCustomer.value
@@ -406,32 +550,37 @@ recAmt.value=""
 
 function loadLedger(){
 
-let type = ledgerType.value
-let from = ledgerFrom.value
-let to = ledgerTo.value
+let type=ledgerType.value
 
-let customers = getCustomers()
-let entries = JSON.parse(localStorage.getItem("entries")||"{}")
-let payments = JSON.parse(localStorage.getItem("payments")||"{}")
+let from=ledgerFrom.value
+
+let to=ledgerTo.value
+
+let customers=getCustomers()
+
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
 
 let html="<table>"
+
 html+="<tr><th>Name</th><th>Milk</th><th>Bill</th><th>Paid</th><th>Balance</th></tr>"
 
-customers.forEach(function(c){
+customers.forEach(c=>{
 
-if(type!="ALL" && c.type!=type) return
+if(type!="ALL" && c.type!=type)return
 
 let total=0
 
-Object.keys(entries).forEach(function(d){
+Object.keys(entries).forEach(d=>{
 
 if(d>=from && d<=to){
 
 let day=entries[d]
 
-if(day[c.name] && !day[c.name].c){
+if(day[c.name]){
 
-total += (day[c.name].m||0) + (day[c.name].e||0)
+total+=day[c.name].m+day[c.name].e
 
 }
 
@@ -439,15 +588,15 @@ total += (day[c.name].m||0) + (day[c.name].e||0)
 
 })
 
-if(total==0) return
+if(total==0)return
 
-let rate = c.type=="D" ? getRateD() : getRateP()
+let rate=c.type=="D"?getRateD():getRateP()
 
-let bill = total * rate
+let bill=total*rate
 
-let paid = payments[c.name] || 0
+let paid=payments[c.name]||0
 
-let bal = bill - paid
+let bal=bill-paid
 
 html+="<tr>"
 html+="<td>"+c.name+"</td>"
@@ -465,21 +614,15 @@ ledgerResult.innerHTML=html
 
 }
 
+
+
 function getRateP(){
-
 return parseFloat(localStorage.getItem("rateP")||90)
-
 }
-
-
 
 function getRateD(){
-
 return parseFloat(localStorage.getItem("rateD")||100)
-
 }
-
-
 
 function loadRates(){
 
@@ -488,8 +631,6 @@ rateP.value=getRateP()
 rateD.value=getRateD()
 
 }
-
-
 
 function saveRates(){
 
@@ -501,8 +642,34 @@ alert("Rates Saved")
 
 }
 
+
+
+function backupData(){
+
+let data={
+
+customers:localStorage.getItem("customers"),
+entries:localStorage.getItem("entries"),
+bills:localStorage.getItem("bills"),
+payments:localStorage.getItem("payments"),
+rateP:localStorage.getItem("rateP"),
+rateD:localStorage.getItem("rateD")
+
+}
+
+let file=new Blob([JSON.stringify(data)],{type:"application/json"})
+
+let a=document.createElement("a")
+
+a.href=URL.createObjectURL(file)
+
+a.download="gaushala_backup.json"
+
+a.click()
+
+}
+
 </script>
 
 </body>
-
 </html>
