@@ -194,29 +194,25 @@ th{text-align:left}
 
 <h3>Ledger</h3>
 
+<select id="ledgerType">
+<option value="ALL">All</option>
+<option value="P">Pickup</option>
+<option value="D">Delivery</option>
+</select>
+
+<label>From Date</label>
+<input type="date" id="ledgerFrom">
+
+<label>To Date</label>
+<input type="date" id="ledgerTo">
+
+<button onclick="loadLedger()">LOAD LEDGER</button>
+
 <div id="ledgerResult"></div>
 
 <button class="back" onclick="show('home')">BACK</button>
 
 </div>
-
-
-<div id="settings" class="page">
-
-<h3>Rates</h3>
-
-<input id="rateP" placeholder="Pickup Rate">
-
-<input id="rateD" placeholder="Delivery Rate">
-
-<button onclick="saveRates()">SAVE RATES</button>
-
-<button class="back" onclick="show('home')">BACK</button>
-
-</div>
-
-</div>
-
 
 <script>
 
