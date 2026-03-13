@@ -533,11 +533,13 @@ let rate=x.type=="Pickup"?ratePickup.value:rateDelivery.value
 
 let bill=total*rate
 
-let paid=0
+let paid = 0
 
-Object.keys(payments).forEach(d=>{
-if(payments[d][x.name]) paid+=Number(payments[d][x.name])
-})
+for (let d in payments) {
+  if (payments[d][x.name]) {
+    paid += Number(payments[d][x.name])
+  }
+}
 
 let bal=bill-paid
 
