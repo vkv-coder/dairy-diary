@@ -321,6 +321,32 @@ custList.appendChild(d)
 })
 
 }
+  function deleteCustomer(i){
+
+let customers = getCustomers()
+
+customers.splice(i,1)
+
+saveCustomers(customers)
+
+loadCustomers()
+
+}
+
+function editCustomer(i){
+
+let c = getCustomers()[i]
+
+cname.value = c.name
+phone1.value = c.p1
+phone2.value = c.p2
+ctype.value = c.type
+stdM.value = c.m
+stdE.value = c.e
+
+deleteCustomer(i)
+
+}
 function loadEntry(){
 
 entryList.innerHTML=""
