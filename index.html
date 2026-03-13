@@ -370,6 +370,10 @@ let customers=getCustomers()
 
 customers.forEach(function(c){
 
+let type=billType.value
+
+if(type!="ALL" && c.type!=type) return
+
 if(c.type!=entryType.value)return
 
 let r=document.createElement("div")
