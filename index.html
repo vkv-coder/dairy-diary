@@ -261,13 +261,13 @@ background:#ffe6e6;
 
 <script>
 
-/* navigation */
-
 function show(p){
 
-document.querySelectorAll(".page").forEach(x=>x.style.display="none")
+document.querySelectorAll(".page").forEach(function(x){
+x.style.display="none"
+})
 
-let page=document.getElementById(p)
+var page=document.getElementById(p)
 
 if(page) page.style.display="block"
 
@@ -278,8 +278,6 @@ if(p=="ledger")loadLedger()
 if(p=="settings")loadRates()
 
 }
-
-/* customer */
 
 function getCustomers(){
 return JSON.parse(localStorage.getItem("customers")||"[]")
@@ -304,13 +302,13 @@ e:parseFloat(stdE.value)||0
 
 saveCustomers(c)
 
-loadCustomers()
-
 cname.value=""
 phone1.value=""
 phone2.value=""
 stdM.value=""
 stdE.value=""
+
+loadCustomers()
 
 }
 
@@ -318,9 +316,7 @@ function loadCustomers(){
 
 custList.innerHTML=""
 
-let customers=getCustomers()
-
-customers.forEach((c,i)=>{
+getCustomers().forEach(function(c,i){
 
 let d=document.createElement("div")
 d.className="customerRow"
@@ -340,12 +336,9 @@ custList.appendChild(d)
 
 function deleteCustomer(i){
 
-let customers=getCustomers()
-
-customers.splice(i,1)
-
-saveCustomers(customers)
-
+let c=getCustomers()
+c.splice(i,1)
+saveCustomers(c)
 loadCustomers()
 
 }
@@ -365,15 +358,13 @@ deleteCustomer(i)
 
 }
 
-/* entry */
-
 function loadEntry(){
 
 entryList.innerHTML=""
 
 let customers=getCustomers()
 
-customers.forEach(c=>{
+customers.forEach(function(c){
 
 if(c.type!=entryType.value)return
 
@@ -396,7 +387,7 @@ let cancel=document.createElement("button")
 cancel.type="button"
 cancel.className="cancel"
 cancel.innerText="X"
-cancel.onclick=()=>r.classList.toggle("cancelled")
+cancel.onclick=function(){r.classList.toggle("cancelled")}
 
 r.append(cname,mInput,eInput,cancel)
 
@@ -416,10 +407,9 @@ let data=JSON.parse(localStorage.getItem("entries")||"{}")
 
 if(!data[date])data[date]={}
 
-rows.forEach(r=>{
+rows.forEach(function(r){
 
 let name=r.dataset.name
-
 let inputs=r.querySelectorAll("input")
 
 data[date][name]={
@@ -440,13 +430,11 @@ show("home")
 
 }
 
-/* billing */
-
 function loadBilling(){
 
 billCustomer.innerHTML=""
 
-getCustomers().forEach(c=>{
+getCustomers().forEach(function(c){
 
 let o=document.createElement("option")
 o.value=c.name
@@ -461,12 +449,16 @@ billCustomer.appendChild(o)
 function generateBill(){
 
 let name=billCustomer.value
+let from=billFrom.value
+let to=billTo.value
 
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let total=0
 
-Object.keys(entries).forEach(d=>{
+Object.keys(entries).forEach(function(d){
+
+if(d>=from && d<=to){
 
 let day=entries[d]
 
@@ -474,11 +466,11 @@ if(day[name] && !day[name].c){
 total+=day[name].m+day[name].e
 }
 
+}
+
 })
 
-let customers=getCustomers()
-
-let c=customers.find(x=>x.name==name)
+let c=getCustomers().find(x=>x.name==name)
 
 let rate=c.type=="D"?100:90
 
@@ -486,7 +478,7 @@ let amt=total*rate
 
 billResult.innerHTML=
 "Customer : "+name+
-"<br>Milk : "+total+
+"<br>Milk : "+total+"L"+
 "<br>Total Bill : ₹"+amt
 
 }
@@ -494,7 +486,6 @@ billResult.innerHTML=
 function generateAllBills(){
 
 let customers=getCustomers()
-
 let from=billFrom.value
 let to=billTo.value
 
@@ -502,11 +493,11 @@ let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let html=""
 
-customers.forEach(c=>{
+customers.forEach(function(c){
 
 let total=0
 
-Object.keys(entries).forEach(d=>{
+Object.keys(entries).forEach(function(d){
 
 if(d>=from && d<=to){
 
@@ -520,8 +511,7 @@ total+=day[c.name].m+day[c.name].e
 
 })
 
-let rate=c.type=="D"?getRateD():getRateP()
-
+let rate=c.type=="D"?100:90
 let amt=total*rate
 
 html+=c.name+" | "+total+"L | ₹"+amt+"<br>"
@@ -531,16 +521,12 @@ html+=c.name+" | "+total+"L | ₹"+amt+"<br>"
 billResult.innerHTML=html
 
 }
-}
-}
-
-/* payment */
 
 function loadPayment(){
 
 payCustomer.innerHTML=""
 
-getCustomers().forEach(c=>{
+getCustomers().forEach(function(c){
 
 let o=document.createElement("option")
 o.value=c.name
@@ -554,25 +540,37 @@ payCustomer.appendChild(o)
 
 function savePayment(){
 
-alert("Payment saved")
+let name=payCustomer.value
+let amt=parseFloat(recAmt.value)||0
+
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+
+if(!payments[name])payments[name]=0
+
+payments[name]+=amt
+
+localStorage.setItem("payments",JSON.stringify(payments))
+
+alert("Payment Saved")
+
+recAmt.value=""
 
 }
-
-/* ledger */
 
 function loadLedger(){
 
 let customers=getCustomers()
 
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
 
-let html=""
+let html="<b>Name | Milk | Bill | Paid | Balance</b><br><br>"
 
-customers.forEach(c=>{
+customers.forEach(function(c){
 
 let total=0
 
-Object.keys(entries).forEach(d=>{
+Object.keys(entries).forEach(function(d){
 
 let day=entries[d]
 
@@ -586,13 +584,18 @@ let rate=c.type=="D"?100:90
 
 let bill=total*rate
 
-html+=c.name+" | Milk:"+total+" | Bill:₹"+bill+"<br>"
+let paid=payments[c.name]||0
+
+let bal=bill-paid
+
+html+=c.name+" | "+total+"L | ₹"+bill+" | ₹"+paid+" | ₹"+bal+"<br>"
 
 })
 
 ledgerResult.innerHTML=html
 
 }
+
 function loadRates(){
 
 rateP.value=localStorage.getItem("rateP")||90
@@ -605,7 +608,7 @@ function saveRates(){
 localStorage.setItem("rateP",rateP.value)
 localStorage.setItem("rateD",rateD.value)
 
-alert("Rates saved")
+alert("Rates Saved")
 
 }
 
