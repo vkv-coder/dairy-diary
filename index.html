@@ -305,17 +305,22 @@ function loadCustomers(){
 
 custList.innerHTML=""
 
-getCustomers().forEach(c=>{
+let customers = getCustomers()
+
+customers.forEach((c,i)=>{
 
 let d=document.createElement("div")
-d.innerText=c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")"
+
+d.innerHTML =
+c.name + " ("+(c.type=="D"?"Delivery":"Pickup")+") " +
+"<button onclick='editCustomer("+i+")'>Edit</button> " +
+"<button onclick='deleteCustomer("+i+")'>Delete</button>"
 
 custList.appendChild(d)
 
 })
 
 }
-
 function loadEntry(){
 
 entryList.innerHTML=""
