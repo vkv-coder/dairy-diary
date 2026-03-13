@@ -281,6 +281,7 @@ eInput.value=e
 let cancel=document.createElement("button")
 cancel.className="cancel"
 cancel.innerText="X"
+cancel.type="button"   // IMPORTANT
 cancel.onclick=()=>r.classList.toggle("cancelled")
 
 r.append(cname,mInput,eInput,cancel)
