@@ -487,9 +487,17 @@ billInfo.innerHTML="No Bill Generated"
 return
 }
 
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+
+let paid=payments[name]||0
+
+let bal=bill.amt-paid
+
 billInfo.innerHTML=
 "Bill Period : "+bill.from+" → "+bill.to+
-"<br>Bill Amount : ₹"+bill.amt
+"<br>Bill Amount : ₹"+bill.amt+
+"<br>Received : ₹"+paid+
+"<br><b>Balance : ₹"+bal+"</b>"
 
 }
 
