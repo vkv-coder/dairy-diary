@@ -410,39 +410,56 @@ recAmt.value=""
 
 function loadLedger(){
 
-let customers=getCustomers()
+let type = ledgerType.value
+let from = ledgerFrom.value
+let to = ledgerTo.value
 
-let bills=JSON.parse(localStorage.getItem("bills")||"{}")
-
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+let customers = getCustomers()
+let entries = JSON.parse(localStorage.getItem("entries")||"{}")
+let payments = JSON.parse(localStorage.getItem("payments")||"{}")
 
 let html="<table>"
-
 html+="<tr><th>Name</th><th>Milk</th><th>Bill</th><th>Paid</th><th>Balance</th></tr>"
 
 customers.forEach(c=>{
 
-let b=bills[c.name]
+if(type!="ALL" && c.type!=type) return
 
-if(!b)return
+let total=0
 
-let paid=payments[c.name]||0
+Object.keys(entries).forEach(d=>{
 
-let bal=b.amt-paid
+if(d>=from && d<=to){
 
-html+="<tr>"
+let day=entries[d]
 
-html+="<td>"+c.name+"</td>"
+if(day[c.name] && !day[c.name].c){
 
-html+="<td>"+b.qty+"</td>"
+total += day[c.name].m + day[c.name].e
 
-html+="<td>₹"+b.amt+"</td>"
+}
 
-html+="<td>₹"+paid+"</td>"
+}
 
-html+="<td>₹"+bal+"</td>"
+})
 
-html+="</tr>"
+if(total==0) return
+
+let rate = c.type=="D" ? getRateD() : getRateP()
+
+let bill = total * rate
+
+let paid = payments[c.name] || 0
+
+let bal = bill - paid
+
+html += "<tr>"
+html += "<td>"+c.name+"</td>"
+html += "<td>"+total+"</td>"
+html += "<td>₹"+bill+"</td>"
+html += "<td>₹"+paid+"</td>"
+html += "<td>₹"+bal+"</td>"
+html += "</tr>"
 
 })
 
@@ -451,7 +468,6 @@ html+="</table>"
 ledgerResult.innerHTML=html
 
 }
-
 
 
 function getRateP(){
