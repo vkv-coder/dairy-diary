@@ -15,7 +15,7 @@ input,select{width:100%;padding:10px;margin:6px 0}
 button{padding:10px;border:none;border-radius:6px;background:#2f69c6;color:#fff}
 .back{background:#444;width:100%;margin-top:10px}
 .row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:6px;margin-bottom:6px}
-.smallbtn{padding:6px 8px;font-size:12px;margin-left:5px}
+.smallbtn{padding:5px 8px;font-size:12px;margin-left:5px}
 .table{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:6px;margin-bottom:5px}
 </style>
 </head>
@@ -40,10 +40,15 @@ button{padding:10px;border:none;border-radius:6px;background:#2f69c6;color:#fff}
 <!-- ENTRY -->
 <div id="entry" style="display:none">
 <h3>Daily Entry</h3>
+
 <input type="date" id="entryDate">
+
 <button onclick="loadEntry()">LOAD ENTRY</button>
+
 <div id="entryTable"></div>
+
 <button onclick="saveEntry()">SAVE ENTRY</button>
+
 <button class="back" onclick="openPage('home')">BACK</button>
 </div>
 
@@ -51,12 +56,15 @@ button{padding:10px;border:none;border-radius:6px;background:#2f69c6;color:#fff}
 <div id="customer" style="display:none">
 <h3>Customer Master</h3>
 
-<input id="custName" placeholder="Name">
-<input id="custPhone" placeholder="Phone">
+<input id="custName" placeholder="Customer Name">
+<input id="custPhone1" placeholder="Phone 1">
+<input id="custPhone2" placeholder="Phone 2">
+
 <select id="custType">
 <option>Pickup</option>
 <option>Delivery</option>
 </select>
+
 <input id="custMorning" placeholder="Morning Qty">
 <input id="custEvening" placeholder="Evening Qty">
 
@@ -77,10 +85,12 @@ button{padding:10px;border:none;border-radius:6px;background:#2f69c6;color:#fff}
 <option>Delivery</option>
 </select>
 
+<select id="billCustomer"></select>
+
 <input type="date" id="billFrom">
 <input type="date" id="billTo">
 
-<button onclick="generateBills()">GENERATE ALL BILLS</button>
+<button onclick="generateBills()">GENERATE BILL</button>
 
 <div class="table">
 <b>Name</b>
@@ -151,8 +161,10 @@ button{padding:10px;border:none;border-radius:6px;background:#2f69c6;color:#fff}
 function openPage(p){
 ["home","entry","customer","billing","payment","ledger","settings"].forEach(x=>document.getElementById(x).style.display="none")
 document.getElementById(p).style.display="block"
+
 if(p=="customer") loadCustomers()
 if(p=="payment") loadPayCustomers()
+if(p=="billing") loadBillCustomers()
 }
 
 function getCustomers(){
@@ -165,13 +177,15 @@ let c=getCustomers()
 
 c.push({
 name:custName.value,
-phone:custPhone.value,
+phone1:custPhone1.value,
+phone2:custPhone2.value,
 type:custType.value,
 m:Number(custMorning.value||0),
 e:Number(custEvening.value||0)
 })
 
 localStorage.setItem("customers",JSON.stringify(c))
+
 loadCustomers()
 
 }
@@ -198,12 +212,10 @@ custList.innerHTML=html
 }
 
 function deleteCustomer(i){
-
 let c=getCustomers()
 c.splice(i,1)
 localStorage.setItem("customers",JSON.stringify(c))
 loadCustomers()
-
 }
 
 function editCustomer(i){
@@ -211,7 +223,8 @@ function editCustomer(i){
 let c=getCustomers()[i]
 
 custName.value=c.name
-custPhone.value=c.phone
+custPhone1.value=c.phone1
+custPhone2.value=c.phone2
 custType.value=c.type
 custMorning.value=c.m
 custEvening.value=c.e
@@ -221,6 +234,7 @@ custEvening.value=c.e
 function loadEntry(){
 
 let c=getCustomers()
+
 let html=""
 
 c.forEach(x=>{
@@ -242,7 +256,9 @@ entryTable.innerHTML=html
 function saveEntry(){
 
 let c=getCustomers()
+
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
 let date=entryDate.value
 
 if(!entries[date]) entries[date]={}
@@ -262,21 +278,38 @@ alert("Saved")
 
 }
 
+function loadBillCustomers(){
+
+let c=getCustomers()
+
+let html='<option>All</option>'
+
+c.forEach(x=>{
+html+=`<option>${x.name}</option>`
+})
+
+billCustomer.innerHTML=html
+
+}
+
 function generateBills(){
 
 let c=getCustomers()
+
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 
 let from=new Date(billFrom.value)
 let to=new Date(billTo.value)
 
 let type=billType.value
+let cust=billCustomer.value
 
 let html=""
 
 c.forEach(x=>{
 
 if(type!="All" && x.type!=type) return
+if(cust!="All" && x.name!=cust) return
 
 let total=0
 
@@ -383,7 +416,7 @@ let d=new Date().toISOString().slice(0,10)
 
 if(!payments[d]) payments[d]={}
 
-payments[d][name]=amt
+payments[d][name]=(payments[d][name]||0)+amt
 
 localStorage.setItem("payments",JSON.stringify(payments))
 
@@ -394,7 +427,9 @@ alert("Saved")
 function loadLedger(){
 
 let c=getCustomers()
+
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
 
 let from=new Date(ledgerFrom.value)
 let to=new Date(ledgerTo.value)
@@ -421,10 +456,17 @@ total+=Number(day[x.name].m||0)+Number(day[x.name].e||0)
 
 })
 
-if(total>0){
-
 let rate=x.type=="Pickup"?ratePickup.value:rateDelivery.value
+
 let bill=total*rate
+
+let paid=0
+
+Object.keys(payments).forEach(d=>{
+if(payments[d][x.name]) paid+=Number(payments[d][x.name])
+})
+
+let bal=bill-paid
 
 html+=`
 <div class="table">
@@ -432,11 +474,9 @@ html+=`
 <div>${total}</div>
 <div>${rate}</div>
 <div>${bill}</div>
-<div>${bill}</div>
+<div>${bal}</div>
 </div>
 `
-
-}
 
 })
 
