@@ -624,6 +624,54 @@ output +=
 billResult.innerHTML=output
 
 }
+  function loadLedgerCustomers(){
+
+let customers = getCustomers()
+
+let entries = JSON.parse(localStorage.getItem("entries") || "{}")
+let payments = JSON.parse(localStorage.getItem("payments") || "{}")
+
+let html = ""
+
+customers.forEach(c => {
+
+let name = c.name
+let totalMilk = 0
+
+Object.keys(entries).forEach(d => {
+
+let day = entries[d]
+
+if(day[name] && !day[name].c){
+
+totalMilk += day[name].m + day[name].e
+
+}
+
+})
+
+let rate = c.type=="D" ? getRateD() : getRateP()
+
+let bill = totalMilk * rate
+
+let paid = payments[name] || 0
+
+let bal = bill - paid
+
+html +=
+"<div style='background:white;padding:10px;margin-bottom:8px;border-radius:8px'>" +
+"<b>"+name+"</b> ("+(c.type=="D"?"Delivery":"Pickup")+")<br>" +
+"Milk : "+totalMilk+" L<br>" +
+"Bill : ₹"+bill+"<br>" +
+"Paid : ₹"+paid+"<br>" +
+"<b>Balance : ₹"+bal+"</b>" +
+"</div>"
+
+})
+
+ledgerResult.innerHTML = html
+
+}
 </script>
 
 </body>
