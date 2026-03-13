@@ -417,13 +417,13 @@ let payments = JSON.parse(localStorage.getItem("payments")||"{}")
 let html="<table>"
 html+="<tr><th>Name</th><th>Milk</th><th>Bill</th><th>Paid</th><th>Balance</th></tr>"
 
-customers.forEach(c=>{
+customers.forEach(function(c){
 
 if(type!="ALL" && c.type!=type) return
 
 let total=0
 
-Object.keys(entries).forEach(d=>{
+Object.keys(entries).forEach(function(d){
 
 if(d>=from && d<=to){
 
@@ -431,7 +431,7 @@ let day=entries[d]
 
 if(day[c.name] && !day[c.name].c){
 
-total += day[c.name].m + day[c.name].e
+total += (day[c.name].m||0) + (day[c.name].e||0)
 
 }
 
@@ -449,13 +449,13 @@ let paid = payments[c.name] || 0
 
 let bal = bill - paid
 
-html += "<tr>"
-html += "<td>"+c.name+"</td>"
-html += "<td>"+total+"</td>"
-html += "<td>₹"+bill+"</td>"
-html += "<td>₹"+paid+"</td>"
-html += "<td>₹"+bal+"</td>"
-html += "</tr>"
+html+="<tr>"
+html+="<td>"+c.name+"</td>"
+html+="<td>"+total+"</td>"
+html+="<td>₹"+bill+"</td>"
+html+="<td>₹"+paid+"</td>"
+html+="<td>₹"+bal+"</td>"
+html+="</tr>"
 
 })
 
@@ -464,7 +464,6 @@ html+="</table>"
 ledgerResult.innerHTML=html
 
 }
-
 
 function getRateP(){
 
