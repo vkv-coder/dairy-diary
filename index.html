@@ -543,14 +543,13 @@ for (let d in payments) {
 
 let bal=bill-paid
 
-html+=`
-<div class="table">
-<div>${x.name}</div>
-<div>${total}</div>
-<div>${rate}</div>
-<div>${bill}</div>
-<div>${bal}</div>
-</div>
+html += "<div class='table'>" +
+"<div>" + x.name + "</div>" +
+"<div>" + total + "</div>" +
+"<div>" + rate + "</div>" +
+"<div>" + bill + "</div>" +
+"<div>" + bal + "</div>" +
+"</div>";
 `
 
 })
