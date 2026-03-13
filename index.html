@@ -549,7 +549,58 @@ function sendWhatsApp(){
 alert("WhatsApp feature next step")
 
 }
+function sendWhatsApp(){
 
+alert("WhatsApp feature next step")
+
+}
+
+function generateAllBills(){
+
+let customers=getCustomers()
+
+let from=billFrom.value
+let to=billTo.value
+
+customers.forEach(c=>{
+
+let name=c.name
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let total=0
+
+Object.keys(entries).forEach(d=>{
+
+let dDate=new Date(d)
+let fDate=new Date(from)
+let tDate=new Date(to)
+
+if(dDate>=fDate && dDate<=tDate){
+
+let day=entries[d]
+
+if(day[name] && !day[name].c){
+
+total+=day[name].m+day[name].e
+
+}
+
+}
+
+})
+
+let rate=c.type=="D"?getRateD():getRateP()
+
+let amt=total*rate
+
+localStorage.setItem("lastBill_"+name,
+JSON.stringify({from:from,to:to,amt:amt}))
+
+})
+
+alert("All Bills Generated")
+
+}
 </script>
 
 </body>
