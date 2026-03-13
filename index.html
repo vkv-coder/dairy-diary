@@ -606,7 +606,15 @@ let customers=getCustomers()
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 let payments=JSON.parse(localStorage.getItem("payments")||"{}")
 
-let html="<b>Name&nbsp;&nbsp;&nbsp;Milk&nbsp;&nbsp;&nbsp;Bill&nbsp;&nbsp;&nbsp;Paid&nbsp;&nbsp;&nbsp;Balance</b><br><br>"
+let html="<table style='width:100%;border-collapse:collapse'>"
+
+html+="<tr style='font-weight:bold'>"
+html+="<td>Name</td>"
+html+="<td style='text-align:right'>Milk</td>"
+html+="<td style='text-align:right'>Bill</td>"
+html+="<td style='text-align:right'>Paid</td>"
+html+="<td style='text-align:right'>Balance</td>"
+html+="</tr>"
 
 customers.forEach(function(c){
 
@@ -627,17 +635,21 @@ let bill=total*rate
 let paid=payments[c.name]||0
 let bal=bill-paid
 
-html+=c.name+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
-total+"L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;₹"+bill+
-"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;₹"+paid+
-"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;₹"+bal+"<br><br>"
+html+="<tr>"
+html+="<td>"+c.name+"</td>"
+html+="<td style='text-align:right'>"+total+"</td>"
+html+="<td style='text-align:right'>₹"+bill+"</td>"
+html+="<td style='text-align:right'>₹"+paid+"</td>"
+html+="<td style='text-align:right'>₹"+bal+"</td>"
+html+="</tr>"
 
 })
+
+html+="</table>"
 
 ledgerResult.innerHTML=html
 
 }
-
 function loadRates(){
 
 rateP.value=localStorage.getItem("rateP")||90
