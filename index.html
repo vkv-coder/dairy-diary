@@ -374,7 +374,9 @@ let cust=billCustomer.value
 
 let html=""
 
-c.forEach(x=>{
+for (let i = 0; i < c.length; i++) {
+
+let x = c[i]
 
 if(type!="All" && x.type!=type) return
 
