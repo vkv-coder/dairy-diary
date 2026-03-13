@@ -168,7 +168,17 @@ button{padding:10px;border:none;border-radius:6px;background:#2f69c6;color:#fff}
 <button class="back" onclick="openPage('home')">BACK</button>
 
 </div>
+<div id="backup" style="display:none">
 
+<h3>Data Backup</h3>
+
+<button onclick="downloadBackup()">DOWNLOAD BACKUP</button>
+
+<input type="file" onchange="restoreBackup(event)">
+
+<button class="back" onclick="openPage('home')">BACK</button>
+
+</div>
 <!-- SETTINGS -->
 
 <div id="settings" style="display:none">
