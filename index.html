@@ -302,7 +302,10 @@ background:#ffe6e6;
 function show(p){
 document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 document.getElementById(p).style.display="block"
-if(p=="entry") entryDate.value=new Date().toISOString().split("T")[0]
+if(p=="entry"){
+entryDate.value=new Date().toISOString().split("T")[0]
+loadEntry()
+}
 if(p=="master")loadCustomers()
 if(p=="billing")loadBilling()
 if(p=="payment")loadPayment()
