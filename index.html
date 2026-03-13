@@ -389,7 +389,9 @@ total+=Number(day[x.name].m||0)+Number(day[x.name].e||0)
 
 let rate=x.type=="Pickup"?ratePickup.value:rateDelivery.value
 
-let bill=total*rate
+let bill = total * rate
+
+if(bill > 0){
 
 html+=`
 <div class="table">
@@ -400,6 +402,8 @@ html+=`
 <div></div>
 </div>
 `
+
+}`
 
 })
 
