@@ -300,18 +300,14 @@ background:#ffe6e6;
 <script>
 
 function show(p){
-
 document.querySelectorAll(".page").forEach(x=>x.style.display="none")
 document.getElementById(p).style.display="block"
-
 if(p=="entry") entryDate.value=new Date().toISOString().split("T")[0]
-
 if(p=="master")loadCustomers()
 if(p=="billing")loadBilling()
 if(p=="payment")loadPayment()
 if(p=="ledger")loadLedgerCustomers()
 if(p=="settings")loadRates()
-
 }
 
 function getCustomers(){
@@ -372,356 +368,35 @@ custList.appendChild(d)
 }
 
 function deleteCustomer(i){
-
 let c=getCustomers()
 c.splice(i,1)
 saveCustomers(c)
 loadCustomers()
-
 }
 
 function editCustomer(i){
-
 let c=getCustomers()[i]
-
 cname.value=c.name
 phone1.value=c.p1
 phone2.value=c.p2
 ctype.value=c.type
 stdM.value=c.m
 stdE.value=c.e
-
 deleteCustomer(i)
-
 }
 
-function loadEntry(){
-
-entryList.innerHTML=""
-
-let customers=getCustomers()
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-let date=entryDate.value
-
-customers.filter(c=>c.type==entryType.value).forEach(c=>{
-
-let r=document.createElement("div")
-r.className="row"
-r.dataset.name=c.name
-
-let m=c.m
-let e=c.e
-
-if(entries[date] && entries[date][c.name]){
-m=entries[date][c.name].m
-e=entries[date][c.name].e
-}
-
-let mInput=document.createElement("input")
-mInput.type="number"
-mInput.step="0.5"
-mInput.value=m
-
-let eInput=document.createElement("input")
-eInput.type="number"
-eInput.step="0.5"
-eInput.value=e
-
-let cancel=document.createElement("button")
-cancel.className="cancel"
-cancel.innerText="X"
-cancel.onclick=()=>r.classList.toggle("cancelled")
-
-let cname=document.createElement("div")
-cname.innerText=c.name
-
-r.append(cname,mInput,eInput,cancel)
-
-entryList.appendChild(r)
-
-})
-
-}
-
-function saveEntry(){
-
-let date=entryDate.value
-let rows=document.querySelectorAll("#entryList .row")
-
-let data=JSON.parse(localStorage.getItem("entries")||"{}")
-if(!data[date])data[date]={}
-
-rows.forEach(r=>{
-
-let name=r.dataset.name
-let inputs=r.querySelectorAll("input")
-
-data[date][name]={
-m:parseFloat(inputs[0].value)||0,
-e:parseFloat(inputs[1].value)||0,
-c:r.classList.contains("cancelled")
-}
-
-})
-
-localStorage.setItem("entries",JSON.stringify(data))
-
-alert("Entry Saved")
-show("home")
-
-}
-
-function loadBilling(){
-
-billCustomer.innerHTML=""
-
-getCustomers().forEach(c=>{
-let o=document.createElement("option")
-o.value=c.name
-o.textContent=c.name
-billCustomer.appendChild(o)
-})
-
-}
-
-function generateBill(){
-
-let name=billCustomer.value
-let from=billFrom.value
-let to=billTo.value
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let total=0
-
-Object.keys(entries).forEach(d=>{
-
-if(d>=from && d<=to){
-
-let day=entries[d]
-
-if(day[name] && !day[name].c){
-total+=day[name].m+day[name].e
-}
-
-}
-
-})
-
-let c=getCustomers().find(x=>x.name==name)
-
-let rate=c.type=="D"?getRateD():getRateP()
-
-let amt=total*rate
-
-localStorage.setItem("lastBill_"+name,
-JSON.stringify({from:from,to:to,amt:amt}))
-
-billResult.innerHTML=
-"Customer : "+name+
-"<br>Total Milk : "+total+
-"<br>Total : ₹"+amt
-
-}
-
-function generateAllBills(){
-
-let customers=getCustomers()
-let from=billFrom.value
-let to=billTo.value
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-
-let output=""
-
-customers.forEach(c=>{
-
-let name=c.name
-let total=0
-
-Object.keys(entries).forEach(d=>{
-
-if(d>=from && d<=to){
-
-let day=entries[d]
-
-if(day[name] && !day[name].c){
-total+=day[name].m+day[name].e
-}
-
-}
-
-})
-
-let rate=c.type=="D"?getRateD():getRateP()
-
-let amt=total*rate
-
-localStorage.setItem("lastBill_"+name,
-JSON.stringify({from:from,to:to,amt:amt}))
-
-output+=name+" : "+total+"L → ₹"+amt+"<br>"
-
-})
-
-billResult.innerHTML=output
-
-}
-
-function loadPayment(){
-
-payCustomer.innerHTML=""
-
-getCustomers().forEach(c=>{
-let o=document.createElement("option")
-o.value=c.name
-o.textContent=c.name
-payCustomer.appendChild(o)
-})
-
-}
-
-function loadCustomerBill(){
-
-let name=payCustomer.value
-
-let bill=JSON.parse(localStorage.getItem("lastBill_"+name)||"{}")
-
-billInfo.innerHTML=
-"Bill Period : "+(bill.from||"-")+" → "+(bill.to||"-")+
-"<br>Bill Amount : ₹"+(bill.amt||0)
-
-}
-
-function savePayment(){
-
-let name=payCustomer.value
-let amt=parseFloat(recAmt.value)||0
-
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-
-if(!payments[name])payments[name]=0
-
-payments[name]+=amt
-
-localStorage.setItem("payments",JSON.stringify(payments))
-
-alert("Payment Saved")
-
-recAmt.value=""
-
-}
-
-function loadLedgerCustomers(){
-
-let customers=getCustomers()
-
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-
-let filter=ledgerType.value
-
-let html=""
-
-customers.forEach(c=>{
-
-if(filter!="ALL" && c.type!=filter)return
-
-let name=c.name
-let totalMilk=0
-
-Object.keys(entries).forEach(d=>{
-
-let day=entries[d]
-
-if(day[name] && !day[name].c){
-totalMilk+=day[name].m+day[name].e
-}
-
-})
-
-let rate=c.type=="D"?getRateD():getRateP()
-let bill=totalMilk*rate
-let paid=payments[name]||0
-let bal=bill-paid
-
-html+="<div class='ledgerRow'>"+
-"<div>"+name+"</div>"+
-"<div>"+totalMilk+"</div>"+
-"<div>"+bill+"</div>"+
-"<div>"+paid+"</div>"+
-"<div>"+bal+"</div>"+
-"</div>"
-
-})
-
-ledgerResult.innerHTML=html
-
-}
-
-function getRateP(){
-return parseFloat(localStorage.getItem("rateP")||90)
-}
-
-function getRateD(){
-return parseFloat(localStorage.getItem("rateD")||100)
-}
+function getRateP(){return parseFloat(localStorage.getItem("rateP")||90)}
+function getRateD(){return parseFloat(localStorage.getItem("rateD")||100)}
 
 function loadRates(){
-
 rateP.value=getRateP()
 rateD.value=getRateD()
-
 }
 
 function saveRates(){
-
 localStorage.setItem("rateP",rateP.value)
 localStorage.setItem("rateD",rateD.value)
-
 alert("Rates Saved")
-
-}
-
-function sendWhatsApp(){
-
-let name=billCustomer.value
-let bill=JSON.parse(localStorage.getItem("lastBill_"+name)||"{}")
-
-if(!bill.amt){
-alert("Generate bill first")
-return
-}
-
-let cust=getCustomers().find(c=>c.name==name)
-let phone=cust.p1||cust.p2
-
-let msg="Gopal Gaushala\n\nCustomer:"+name+
-"\nBill Amount: ₹"+bill.amt
-
-window.open("https://wa.me/91"+phone+"?text="+encodeURIComponent(msg))
-
-}
-
-function sendAllWhatsApp(){
-
-let customers=getCustomers()
-
-customers.forEach(c=>{
-
-let bill=JSON.parse(localStorage.getItem("lastBill_"+c.name)||"{}")
-
-if(!bill.amt)return
-
-let phone=c.p1||c.p2
-
-let msg="Gopal Gaushala\n\nCustomer:"+c.name+
-"\nBill Amount: ₹"+bill.amt
-
-window.open("https://wa.me/91"+phone+"?text="+encodeURIComponent(msg))
-
-})
-
 }
 
 </script>
