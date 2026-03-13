@@ -320,7 +320,55 @@ return JSON.parse(localStorage.getItem("customers")||"[]")
 function saveCustomers(c){
 localStorage.setItem("customers",JSON.stringify(c))
 }
+function loadEntry(){
 
+entryList.innerHTML=""
+
+let customers=getCustomers()
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+let date=entryDate.value
+
+customers.forEach(c=>{
+
+if(c.type!=entryType.value) return
+
+let r=document.createElement("div")
+r.className="row"
+r.dataset.name=c.name
+
+let m=c.m
+let e=c.e
+
+if(entries[date] && entries[date][c.name]){
+m=entries[date][c.name].m
+e=entries[date][c.name].e
+}
+
+let cname=document.createElement("div")
+cname.innerText=c.name
+
+let mInput=document.createElement("input")
+mInput.type="number"
+mInput.step="0.5"
+mInput.value=m
+
+let eInput=document.createElement("input")
+eInput.type="number"
+eInput.step="0.5"
+eInput.value=e
+
+let cancel=document.createElement("button")
+cancel.className="cancel"
+cancel.innerText="X"
+cancel.onclick=()=>r.classList.toggle("cancelled")
+
+r.append(cname,mInput,eInput,cancel)
+
+entryList.appendChild(r)
+
+})
+
+}
 function saveCustomer(){
 
 let c=getCustomers()
