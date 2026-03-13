@@ -1,30 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Gopal Gaushala</title>
+
 <style>
+
 body{font-family:Arial;margin:0;background:#eef3ff}
-.header{background:#2f6fd1;color:#fff;padding:16px;text-align:center;font-size:22px;font-weight:bold}
-.container{max-width:520px;margin:auto;padding:15px}
-.menu{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.menu button{padding:16px;font-size:18px;background:#2f6fd1;color:yellow;border:none;border-radius:10px}
+
+.header{
+background:#2f6fd1;
+color:#fff;
+padding:16px;
+text-align:center;
+font-size:22px;
+font-weight:bold
+}
+
+.container{
+max-width:520px;
+margin:auto;
+padding:15px
+}
+
+.menu{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px
+}
+
+.menu button{
+padding:16px;
+font-size:18px;
+background:#2f6fd1;
+color:yellow;
+border:none;
+border-radius:10px
+}
+
 .page{display:none}
-input,select{width:100%;padding:10px;font-size:16px;margin-top:6px;margin-bottom:10px;box-sizing:border-box}
-button{padding:10px;font-size:15px;background:#2f6fd1;color:yellow;border:none;border-radius:6px;margin-top:6px}
-.back{background:#444;color:#fff;width:100%}
-.row{display:grid;grid-template-columns:2fr 1fr 1fr 40px;gap:6px;background:#fff;padding:8px;margin-bottom:6px;border-radius:8px}
-.head{display:grid;grid-template-columns:2fr 1fr 1fr 40px;font-weight:bold;margin-bottom:5px}
-.customerRow{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:8px;margin-bottom:6px;border-radius:8px}
-.customerRow button{width:auto;margin-left:6px}
-.cancel{background:red;color:#fff;border:none;border-radius:6px}
-.cancelled{opacity:.4;background:#ffe6e6}
-#billInfo{background:#fff;padding:8px;border-radius:8px;margin-bottom:10px}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}
-th,td{padding:8px;border-bottom:1px solid #ddd;text-align:right}
-th:first-child,td:first-child{text-align:left}
+
+input,select{
+width:100%;
+padding:10px;
+font-size:16px;
+margin-top:6px;
+margin-bottom:10px
+}
+
+button{
+padding:10px;
+font-size:15px;
+background:#2f6fd1;
+color:yellow;
+border:none;
+border-radius:6px;
+margin-top:6px
+}
+
+.back{
+background:#444;
+color:#fff;
+width:100%
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white
+}
+
+th,td{
+padding:8px;
+border-bottom:1px solid #ccc
+}
+
+th{text-align:left}
+
 </style>
+
 </head>
+
 <body>
 
 <div class="header">🐄 GOPAL GAUSHALA</div>
@@ -32,398 +90,408 @@ th:first-child,td:first-child{text-align:left}
 <div class="container">
 
 <div id="home" class="page" style="display:block">
-  <div class="menu">
-    <button onclick="show('entry')">TODAY ENTRY</button>
-    <button onclick="show('master')">CUSTOMERS</button>
-    <button onclick="show('billing')">BILLING</button>
-    <button onclick="show('payment')">PAYMENT</button>
-    <button onclick="show('ledger')">LEDGER</button>
-    <button onclick="show('settings')">SETTINGS</button>
-  </div>
+
+<div class="menu">
+
+<button onclick="show('entry')">TODAY ENTRY</button>
+
+<button onclick="show('master')">CUSTOMERS</button>
+
+<button onclick="show('billing')">BILLING</button>
+
+<button onclick="show('payment')">PAYMENT</button>
+
+<button onclick="show('ledger')">LEDGER</button>
+
+<button onclick="show('settings')">SETTINGS</button>
+
 </div>
+
+</div>
+
 
 <div id="master" class="page">
-  <h3>Customer Master</h3>
-  <input id="cname" placeholder="Customer Name">
-  <input id="phone1" placeholder="Phone 1">
-  <input id="phone2" placeholder="Phone 2">
-  <select id="ctype">
-    <option value="P">Pickup</option>
-    <option value="D">Delivery</option>
-  </select>
-  <input id="stdM" placeholder="Std Morning Qty">
-  <input id="stdE" placeholder="Std Evening Qty">
-  <button onclick="saveCustomer()">SAVE CUSTOMER</button>
-  <div id="custList"></div>
-  <button class="back" onclick="show('home')">BACK</button>
+
+<h3>Customer Master</h3>
+
+<input id="cname" placeholder="Customer Name">
+
+<select id="ctype">
+<option value="P">Pickup</option>
+<option value="D">Delivery</option>
+</select>
+
+<button onclick="saveCustomer()">SAVE CUSTOMER</button>
+
+<div id="custList"></div>
+
+<button class="back" onclick="show('home')">BACK</button>
+
 </div>
+
 
 <div id="entry" class="page">
-  <h3>Daily Entry</h3>
-  <input type="date" id="entryDate">
-  <select id="entryType" onchange="loadEntry()">
-    <option value="D">Delivery</option>
-    <option value="P">Pickup</option>
-  </select>
-  <button onclick="loadEntry()">LOAD ENTRY</button>
-  <div class="head">
-    <div>Customer</div>
-    <div>Morning</div>
-    <div>Evening</div>
-    <div></div>
-  </div>
-  <div id="entryList"></div>
-  <button onclick="saveEntry()">SAVE ENTRY</button>
-  <button class="back" onclick="show('home')">BACK</button>
+
+<h3>Daily Entry</h3>
+
+<input type="date" id="entryDate">
+
+<select id="entryType">
+<option value="P">Pickup</option>
+<option value="D">Delivery</option>
+</select>
+
+<button onclick="loadEntry()">LOAD ENTRY</button>
+
+<div id="entryList"></div>
+
+<button onclick="saveEntry()">SAVE ENTRY</button>
+
+<button class="back" onclick="show('home')">BACK</button>
+
 </div>
+
 
 <div id="billing" class="page">
-  <h3>Billing</h3>
-  <select id="billType">
-    <option value="ALL">All</option>
-    <option value="P">Pickup</option>
-    <option value="D">Delivery</option>
-  </select>
-  <select id="billCustomer"></select>
-  <label>From Date</label>
-  <input type="date" id="billFrom">
-  <label>To Date</label>
-  <input type="date" id="billTo">
-  <button onclick="generateBill()">GENERATE BILL</button>
-  <button onclick="generateAllBills()">GENERATE ALL BILLS</button>
-  <div id="billResult"></div>
-  <button class="back" onclick="show('home')">BACK</button>
+
+<h3>Billing</h3>
+
+<select id="billCustomer"></select>
+
+<label>From Date</label>
+<input type="date" id="billFrom">
+
+<label>To Date</label>
+<input type="date" id="billTo">
+
+<button onclick="generateBill()">GENERATE BILL</button>
+
+<button onclick="generateAllBills()">GENERATE ALL BILLS</button>
+
+<div id="billResult"></div>
+
+<button class="back" onclick="show('home')">BACK</button>
+
 </div>
+
 
 <div id="payment" class="page">
-  <h3>Payment</h3>
-  <select id="payCustomer" onchange="loadCustomerBill()"></select>
-  <div id="billInfo"></div>
-  <input id="recAmt" placeholder="Received Amount">
-  <button onclick="savePayment()">SAVE PAYMENT</button>
-  <button class="back" onclick="show('home')">BACK</button>
+
+<h3>Payment</h3>
+
+<select id="payCustomer"></select>
+
+<input id="recAmt" placeholder="Received Amount">
+
+<button onclick="savePayment()">SAVE PAYMENT</button>
+
+<button class="back" onclick="show('home')">BACK</button>
+
 </div>
+
 
 <div id="ledger" class="page">
-  <h3>Ledger</h3>
-  <div id="ledgerResult"></div>
-  <button class="back" onclick="show('home')">BACK</button>
+
+<h3>Ledger</h3>
+
+<div id="ledgerResult"></div>
+
+<button class="back" onclick="show('home')">BACK</button>
+
 </div>
+
 
 <div id="settings" class="page">
-  <h3>Rates</h3>
-  <input id="rateP" placeholder="Pickup Rate">
-  <input id="rateD" placeholder="Delivery Rate">
-  <button onclick="saveRates()">SAVE RATES</button>
-  <button class="back" onclick="show('home')">BACK</button>
+
+<h3>Rates</h3>
+
+<input id="rateP" placeholder="Pickup Rate">
+
+<input id="rateD" placeholder="Delivery Rate">
+
+<button onclick="saveRates()">SAVE RATES</button>
+
+<button class="back" onclick="show('home')">BACK</button>
+
 </div>
 
 </div>
+
 
 <script>
-function show(p){
-  document.querySelectorAll(".page").forEach(function(x){
-    x.style.display="none";
-  });
-  var page=document.getElementById(p);
-  if(page){ page.style.display="block"; }
 
-  if(p==="master") loadCustomers();
-  if(p==="entry"){
-    if(!entryDate.value) entryDate.value=new Date().toISOString().split("T")[0];
-    loadEntry();
-  }
-  if(p==="billing") loadBilling();
-  if(p==="payment") loadPayment();
-  if(p==="ledger") loadLedger();
-  if(p==="settings") loadRates();
+function show(p){
+
+document.querySelectorAll(".page").forEach(x=>x.style.display="none")
+
+document.getElementById(p).style.display="block"
+
+if(p=="master")loadCustomers()
+
+if(p=="billing")loadBilling()
+
+if(p=="payment")loadPayment()
+
+if(p=="ledger")loadLedger()
+
+if(p=="settings")loadRates()
+
 }
+
+
 
 function getCustomers(){
-  return JSON.parse(localStorage.getItem("customers")||"[]");
+
+return JSON.parse(localStorage.getItem("customers")||"[]")
+
 }
-function saveCustomers(c){
-  localStorage.setItem("customers",JSON.stringify(c));
-}
-function getRateP(){
-  return parseFloat(localStorage.getItem("rateP")||90);
-}
-function getRateD(){
-  return parseFloat(localStorage.getItem("rateD")||100);
-}
+
+
 
 function saveCustomer(){
-  var c=getCustomers();
-  c.push({
-    name:cname.value,
-    p1:phone1.value,
-    p2:phone2.value,
-    type:ctype.value,
-    m:parseFloat(stdM.value)||0,
-    e:parseFloat(stdE.value)||0
-  });
-  saveCustomers(c);
-  cname.value="";
-  phone1.value="";
-  phone2.value="";
-  stdM.value="";
-  stdE.value="";
-  loadCustomers();
+
+let c=getCustomers()
+
+c.push({
+
+name:cname.value,
+
+type:ctype.value
+
+})
+
+localStorage.setItem("customers",JSON.stringify(c))
+
+cname.value=""
+
+loadCustomers()
+
 }
+
+
 
 function loadCustomers(){
-  custList.innerHTML="";
-  getCustomers().forEach(function(c,i){
-    var d=document.createElement("div");
-    d.className="customerRow";
-    d.innerHTML=
-      "<span>"+c.name+" ("+(c.type==="D"?"Delivery":"Pickup")+")</span>"+
-      "<span>"+
-      "<button onclick='editCustomer("+i+")'>Edit</button>"+
-      "<button style='background:red;color:white' onclick='deleteCustomer("+i+")'>Delete</button>"+
-      "</span>";
-    custList.appendChild(d);
-  });
+
+custList.innerHTML=""
+
+getCustomers().forEach((c,i)=>{
+
+let d=document.createElement("div")
+
+d.innerHTML=c.name+" ("+(c.type=="D"?"Delivery":"Pickup")+")"
+
+custList.appendChild(d)
+
+})
+
 }
 
-function deleteCustomer(i){
-  var c=getCustomers();
-  c.splice(i,1);
-  saveCustomers(c);
-  loadCustomers();
-}
-function editCustomer(i){
-  var c=getCustomers()[i];
-  cname.value=c.name;
-  phone1.value=c.p1;
-  phone2.value=c.p2;
-  ctype.value=c.type;
-  stdM.value=c.m;
-  stdE.value=c.e;
-  deleteCustomer(i);
-}
 
-function loadEntry(){
-  entryList.innerHTML="";
-  var customers=getCustomers();
-  var entries=JSON.parse(localStorage.getItem("entries")||"{}");
-  var date=entryDate.value || new Date().toISOString().split("T")[0];
-  entryDate.value=date;
-
-  customers.forEach(function(c){
-    if(c.type!==entryType.value) return;
-
-    var r=document.createElement("div");
-    r.className="row";
-    r.dataset.name=c.name;
-
-    var m=c.m||0, e=c.e||0, cancelled=false;
-    if(entries[date] && entries[date][c.name]){
-      m=entries[date][c.name].m||0;
-      e=entries[date][c.name].e||0;
-      cancelled=!!entries[date][c.name].c;
-    }
-
-    var cnameDiv=document.createElement("div");
-    cnameDiv.innerText=c.name;
-
-    var mInput=document.createElement("input");
-    mInput.type="number";
-    mInput.step="0.5";
-    mInput.value=m;
-
-    var eInput=document.createElement("input");
-    eInput.type="number";
-    eInput.step="0.5";
-    eInput.value=e;
-
-    var cancel=document.createElement("button");
-    cancel.type="button";
-    cancel.className="cancel";
-    cancel.innerText="X";
-    cancel.onclick=function(){ r.classList.toggle("cancelled"); };
-
-    r.append(cnameDiv,mInput,eInput,cancel);
-    if(cancelled) r.classList.add("cancelled");
-    entryList.appendChild(r);
-  });
-}
-
-function saveEntry(){
-  var date=entryDate.value;
-  var rows=document.querySelectorAll("#entryList .row");
-  var data=JSON.parse(localStorage.getItem("entries")||"{}");
-  if(!data[date]) data[date]={};
-
-  rows.forEach(function(r){
-    var name=r.dataset.name;
-    var inputs=r.querySelectorAll("input");
-    data[date][name]={
-      m:parseFloat(inputs[0].value)||0,
-      e:parseFloat(inputs[1].value)||0,
-      c:r.classList.contains("cancelled")
-    };
-  });
-
-  localStorage.setItem("entries",JSON.stringify(data));
-  alert("Entry Saved");
-  show("home");
-}
 
 function loadBilling(){
-  billCustomer.innerHTML="";
-  getCustomers().forEach(function(c){
-    var o=document.createElement("option");
-    o.value=c.name;
-    o.textContent=c.name;
-    billCustomer.appendChild(o);
-  });
+
+billCustomer.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let o=document.createElement("option")
+
+o.value=c.name
+
+o.innerText=c.name
+
+billCustomer.appendChild(o)
+
+})
+
 }
+
+
 
 function generateBill(){
-  var name=billCustomer.value;
-  var from=billFrom.value;
-  var to=billTo.value;
-  var entries=JSON.parse(localStorage.getItem("entries")||"{}");
-  var total=0;
 
-  Object.keys(entries).forEach(function(d){
-    if(d>=from && d<=to){
-      var day=entries[d];
-      if(day[name] && !day[name].c){
-        total+= (day[name].m||0) + (day[name].e||0);
-      }
-    }
-  });
+let name=billCustomer.value
 
-  var c=getCustomers().find(function(x){ return x.name===name; });
-  var rate=c && c.type==="D" ? getRateD() : getRateP();
-  var amt=total*rate;
+let from=billFrom.value
 
-  var bills=JSON.parse(localStorage.getItem("bills")||"{}");
-  bills[name]={from:from,to:to,qty:total,amt:amt};
-  localStorage.setItem("bills",JSON.stringify(bills));
+let to=billTo.value
 
-  billResult.innerHTML=
-    "Customer : "+name+
-    "<br>Period : "+from+" to "+to+
-    "<br>Milk : "+total+
-    "<br>Rate : ₹"+rate+
-    "<br><b>Total Bill : ₹"+amt+"</b>";
+let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+let total=0
+
+Object.keys(entries).forEach(d=>{
+
+if(d>=from && d<=to){
+
+let day=entries[d]
+
+if(day[name] && !day[name].c){
+
+total+=day[name].m+day[name].e
+
 }
+
+}
+
+})
+
+let c=getCustomers().find(x=>x.name==name)
+
+let rate=c.type=="D"?getRateD():getRateP()
+
+let amt=total*rate
+
+let bills=JSON.parse(localStorage.getItem("bills")||"{}")
+
+bills[name]={from:from,to:to,qty:total,amt:amt}
+
+localStorage.setItem("bills",JSON.stringify(bills))
+
+billResult.innerHTML="Bill Amount ₹"+amt
+
+}
+
+
 
 function generateAllBills(){
-  var customers=getCustomers();
-  var from=billFrom.value;
-  var to=billTo.value;
-  var type=billType.value;
-  var entries=JSON.parse(localStorage.getItem("entries")||"{}");
-  var bills=JSON.parse(localStorage.getItem("bills")||"{}");
-  var html="";
 
-  customers.forEach(function(c){
-    if(type!=="ALL" && c.type!==type) return;
+getCustomers().forEach(c=>{
 
-    var total=0;
-    Object.keys(entries).forEach(function(d){
-      if(d>=from && d<=to){
-        var day=entries[d];
-        if(day[c.name] && !day[c.name].c){
-          total+=(day[c.name].m||0)+(day[c.name].e||0);
-        }
-      }
-    });
+billCustomer.value=c.name
 
-    if(total<=0) return;
+generateBill()
 
-    var rate=c.type==="D" ? getRateD() : getRateP();
-    var amt=total*rate;
-    bills[c.name]={from:from,to:to,qty:total,amt:amt};
-    html+=c.name+" | "+total+" | ₹"+amt+"<br>";
-  });
+})
 
-  localStorage.setItem("bills",JSON.stringify(bills));
-  billResult.innerHTML=html || "No bills for selected filter/date";
 }
+
+
 
 function loadPayment(){
-  payCustomer.innerHTML="";
-  getCustomers().forEach(function(c){
-    var o=document.createElement("option");
-    o.value=c.name;
-    o.textContent=c.name;
-    payCustomer.appendChild(o);
-  });
-  loadCustomerBill();
+
+payCustomer.innerHTML=""
+
+getCustomers().forEach(c=>{
+
+let o=document.createElement("option")
+
+o.value=c.name
+
+o.innerText=c.name
+
+payCustomer.appendChild(o)
+
+})
+
 }
 
-function loadCustomerBill(){
-  var name=payCustomer.value;
-  var bills=JSON.parse(localStorage.getItem("bills")||"{}");
-  var payments=JSON.parse(localStorage.getItem("payments")||"{}");
-  var b=bills[name];
-  var paid=payments[name]||0;
 
-  if(!b){
-    billInfo.innerHTML="No bill generated";
-    return;
-  }
-
-  var bal=(b.amt||0)-paid;
-  billInfo.innerHTML=
-    "Bill Period : "+b.from+" to "+b.to+
-    "<br>Bill Amount : ₹"+b.amt+
-    "<br>Paid : ₹"+paid+
-    "<br><b>Balance : ₹"+bal+"</b>";
-}
 
 function savePayment(){
-  var name=payCustomer.value;
-  var amt=parseFloat(recAmt.value)||0;
-  var payments=JSON.parse(localStorage.getItem("payments")||"{}");
-  if(!payments[name]) payments[name]=0;
-  payments[name]+=amt;
-  localStorage.setItem("payments",JSON.stringify(payments));
-  alert("Payment Saved");
-  recAmt.value="";
-  loadCustomerBill();
+
+let name=payCustomer.value
+
+let amt=parseFloat(recAmt.value)||0
+
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+
+payments[name]=(payments[name]||0)+amt
+
+localStorage.setItem("payments",JSON.stringify(payments))
+
+alert("Payment Saved")
+
+recAmt.value=""
+
 }
+
+
 
 function loadLedger(){
-  var customers=getCustomers();
-  var bills=JSON.parse(localStorage.getItem("bills")||"{}");
-  var payments=JSON.parse(localStorage.getItem("payments")||"{}");
 
-  var html="<table>";
-  html+="<tr><th>Name</th><th>Milk</th><th>Bill</th><th>Paid</th><th>Balance</th></tr>";
+let customers=getCustomers()
 
-  customers.forEach(function(c){
-    var b=bills[c.name];
-    if(!b || !b.qty) return;
-    var paid=payments[c.name]||0;
-    var bal=(b.amt||0)-paid;
-    html+="<tr>";
-    html+="<td>"+c.name+"</td>";
-    html+="<td>"+b.qty+"</td>";
-    html+="<td>₹"+b.amt+"</td>";
-    html+="<td>₹"+paid+"</td>";
-    html+="<td>₹"+bal+"</td>";
-    html+="</tr>";
-  });
+let bills=JSON.parse(localStorage.getItem("bills")||"{}")
 
-  html+="</table>";
-  ledgerResult.innerHTML=html;
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+
+let html="<table>"
+
+html+="<tr><th>Name</th><th>Milk</th><th>Bill</th><th>Paid</th><th>Balance</th></tr>"
+
+customers.forEach(c=>{
+
+let b=bills[c.name]
+
+if(!b)return
+
+let paid=payments[c.name]||0
+
+let bal=b.amt-paid
+
+html+="<tr>"
+
+html+="<td>"+c.name+"</td>"
+
+html+="<td>"+b.qty+"</td>"
+
+html+="<td>₹"+b.amt+"</td>"
+
+html+="<td>₹"+paid+"</td>"
+
+html+="<td>₹"+bal+"</td>"
+
+html+="</tr>"
+
+})
+
+html+="</table>"
+
+ledgerResult.innerHTML=html
+
 }
+
+
+
+function getRateP(){
+
+return parseFloat(localStorage.getItem("rateP")||90)
+
+}
+
+
+
+function getRateD(){
+
+return parseFloat(localStorage.getItem("rateD")||100)
+
+}
+
+
 
 function loadRates(){
-  rateP.value=getRateP();
-  rateD.value=getRateD();
+
+rateP.value=getRateP()
+
+rateD.value=getRateD()
+
 }
+
+
+
 function saveRates(){
-  localStorage.setItem("rateP",rateP.value);
-  localStorage.setItem("rateD",rateD.value);
-  alert("Rates Saved");
+
+localStorage.setItem("rateP",rateP.value)
+
+localStorage.setItem("rateD",rateD.value)
+
+alert("Rates Saved")
+
 }
+
 </script>
+
 </body>
+
 </html>
