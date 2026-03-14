@@ -289,11 +289,12 @@ function getNextFromDateAll(names){
   return d.toISOString().slice(0,10)
 }
 
-function recordBillGenerated(name, toDate){
+function recordBillGenerated(name, fromDate, toDate){
   let bh=getBillHistory()
   if(!bh[name]) bh[name]={}
   // only update if new toDate is later
   if(!bh[name].lastTo || toDate > bh[name].lastTo){
+    bh[name].lastFrom = fromDate
     bh[name].lastTo = toDate
   }
   saveBillHistory(bh)
@@ -509,21 +510,29 @@ function generateBills(){
     let balance=bill-paid
 
     if(bill>0){
+      // get previous bill period BEFORE recording new one
+      let bhNow=getBillHistory()
+      let prevFrom=bhNow[x.name]&&bhNow[x.name].lastFrom?bhNow[x.name].lastFrom:null
+      let prevTo=bhNow[x.name]&&bhNow[x.name].lastTo?bhNow[x.name].lastTo:null
+      let lastPeriodStr=prevFrom&&prevTo?"📅 Last: "+prevFrom+" → "+prevTo:"📅 Last: First bill"
+
       // save bill history for this customer
-      recordBillGenerated(x.name, billTo.value)
+      recordBillGenerated(x.name, billFrom.value, billTo.value)
 
       let item={name:x.name,phone1:x.phone1,phone2:x.phone2,total:total,rate:rate,bill:bill,paid:paid,balance:balance,from:billFrom.value,to:billTo.value}
       billData.push(item)
 
       let hasPhone=cleanPhone(x.phone1)||cleanPhone(x.phone2)
       let waAction=hasPhone?
-        "<button class='wa-btn' onclick='sendSingleWa("+( billData.length-1)+")'>📲 WhatsApp</button>":
+        "<button class='wa-btn' onclick='sendSingleWa("+(billData.length-1)+")'>📲 WhatsApp</button>":
         "<span style='font-size:11px;color:#aaa'>No phone</span>"
 
       html+="<div class='bill-row'>"+
       "<div>"+
       "<div class='bill-name'>"+x.name+"</div>"+
       "<div class='bill-details'>"+
+      "<span style='color:#888;font-size:12px'>"+lastPeriodStr+"</span><br>"+
+      "<span style='color:#2f69c6;font-size:12px'>🆕 Current: "+billFrom.value+" → "+billTo.value+"</span><br>"+
       "🥛 "+total+"L &nbsp;|&nbsp; ₹"+rate+"/L &nbsp;|&nbsp; 🧾 ₹"+bill+"<br>"+
       "✅ Paid: ₹"+paid+" &nbsp;|&nbsp; <b style='color:"+(balance>0?"#c0392b":"#27ae60")+"'>⚖️ Bal: ₹"+balance+"</b>"+
       "</div>"+
