@@ -22,6 +22,7 @@ select{height:48px}
 .date-wrap input[type=date]{padding-right:40px;width:100%;box-sizing:border-box;font-size:15px;height:48px;border:1px solid #ccc;border-radius:6px;padding-left:10px}
 .date-wrap .cal-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none}
 .date-label{font-size:13px;color:#444;font-weight:bold;margin-top:10px;margin-bottom:0}
+.date-hint{font-size:12px;color:#27ae60;margin:2px 0 4px;padding-left:4px}
 
 button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;cursor:pointer;font-size:14px}
 .back{background:#444;width:100%;margin-top:10px}
@@ -59,6 +60,21 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 .pay-history-row:last-child{border-bottom:none}
 .section-title{font-size:13px;color:#666;margin:8px 0 2px;font-weight:bold}
 .filter-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:20px;width:88%;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.modal-title{font-size:16px;font-weight:bold;margin-bottom:6px}
+.modal-sub{font-size:13px;color:#666;margin-bottom:16px}
+.modal-num-btn{display:block;width:100%;padding:14px;margin:8px 0;font-size:15px;background:#f0f0f0;border:2px solid #ddd;border-radius:8px;cursor:pointer;text-align:left;font-weight:bold}
+.modal-num-btn:hover{background:#e0f0e0;border-color:#25D366}
+.modal-both-btn{display:block;width:100%;padding:12px;margin:8px 0;font-size:14px;background:#25D366;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
+.modal-skip-btn{display:block;width:100%;padding:10px;margin:4px 0;font-size:13px;background:#eee;color:#555;border:none;border-radius:8px;cursor:pointer}
+
+/* BILL HISTORY INFO BOX */
+.bill-info-box{background:#e8f4fd;border-radius:8px;padding:10px 12px;margin:8px 0;font-size:13px;border-left:4px solid #2f69c6}
+.bill-info-box b{color:#2f69c6}
 </style>
 </head>
 
@@ -106,7 +122,7 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 <div id="customer" style="display:none">
 <h3>Customer Master</h3>
 <input id="custName" placeholder="Customer Name">
-<input id="custPhone1" placeholder="Phone 1 (for WhatsApp)" type="tel">
+<input id="custPhone1" placeholder="Phone 1" type="tel">
 <input id="custPhone2" placeholder="Phone 2" type="tel">
 <select id="custType">
 <option>Pickup</option>
@@ -124,24 +140,32 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 <!-- BILLING -->
 <div id="billing" style="display:none">
 <h3>Billing</h3>
+
 <div class="filter-row">
-<select id="billType">
+<select id="billType" onchange="onBillFilterChange()">
 <option value="All">All Types</option>
 <option value="Pickup">Pickup</option>
 <option value="Delivery">Delivery</option>
 </select>
-<select id="billCustomer"></select>
+<select id="billCustomer" onchange="onBillCustomerChange()"></select>
 </div>
+
+<!-- Bill period info -->
+<div id="billPeriodInfo"></div>
+
 <div class="date-label">📅 From Date</div>
 <div class="date-wrap">
 <input type="date" id="billFrom">
 <span class="cal-icon">📅</span>
 </div>
+<div id="billFromHint" class="date-hint"></div>
+
 <div class="date-label">📅 To Date</div>
 <div class="date-wrap">
 <input type="date" id="billTo">
 <span class="cal-icon">📅</span>
 </div>
+
 <button onclick="generateBills()" style="width:100%;margin-top:8px">🧾 GENERATE BILL</button>
 <div id="billResult" style="margin-top:10px"></div>
 <div id="waSendAllWrap" style="display:none">
@@ -217,341 +241,538 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 
 </div>
 
+<!-- WA PICKER MODAL -->
+<div class="modal-overlay" id="waModal">
+<div class="modal-box">
+<div class="modal-title" id="waModalTitle">Select WhatsApp Number</div>
+<div class="modal-sub" id="waModalSub">Which number has WhatsApp?</div>
+<div id="waModalButtons"></div>
+</div>
+</div>
+
 <script>
 
-// ---- bill data store for WhatsApp ----
 let billData = []
+let waQueue = [], waIndex = 0
 
+// ---- BILL HISTORY per customer ----
+// stored as { customerName: { lastTo: "YYYY-MM-DD" } }
+function getBillHistory(){
+  return JSON.parse(localStorage.getItem("billHistory")||"{}")
+}
+function saveBillHistory(bh){
+  localStorage.setItem("billHistory", JSON.stringify(bh))
+}
+
+// returns next from date for a customer (lastTo + 1 day), or null if never billed
+function getNextFromDate(name){
+  if(!name || name==="All") return null
+  let bh=getBillHistory()
+  if(!bh[name] || !bh[name].lastTo) return null
+  let d=new Date(bh[name].lastTo)
+  d.setDate(d.getDate()+1)
+  return d.toISOString().slice(0,10)
+}
+
+// for "All" — find the latest lastTo across all shown customers, +1 day
+function getNextFromDateAll(names){
+  let bh=getBillHistory()
+  let latest=null
+  names.forEach(n=>{
+    if(bh[n] && bh[n].lastTo){
+      if(!latest || bh[n].lastTo > latest) latest=bh[n].lastTo
+    }
+  })
+  if(!latest) return null
+  let d=new Date(latest)
+  d.setDate(d.getDate()+1)
+  return d.toISOString().slice(0,10)
+}
+
+function recordBillGenerated(name, toDate){
+  let bh=getBillHistory()
+  if(!bh[name]) bh[name]={}
+  // only update if new toDate is later
+  if(!bh[name].lastTo || toDate > bh[name].lastTo){
+    bh[name].lastTo = toDate
+  }
+  saveBillHistory(bh)
+}
+
+// ---- PAGE NAV ----
 function openPage(p){
-["home","entry","customer","billing","payment","ledger","settings","backup"].forEach(x=>document.getElementById(x).style.display="none")
-document.getElementById(p).style.display="block"
-if(p=="customer") loadCustomers()
-if(p=="billing") loadBillCustomers()
-if(p=="payment") loadPayCustomers()
-if(p=="entry") loadEntry()
-if(p=="ledger") loadLedgerCustomers()
+  ["home","entry","customer","billing","payment","ledger","settings","backup"].forEach(x=>document.getElementById(x).style.display="none")
+  document.getElementById(p).style.display="block"
+  if(p=="customer") loadCustomers()
+  if(p=="billing") loadBillCustomers()
+  if(p=="payment") loadPayCustomers()
+  if(p=="entry") loadEntry()
+  if(p=="ledger") loadLedgerCustomers()
 }
 
 function getCustomers(){
-return JSON.parse(localStorage.getItem("customers")||"[]")
+  return JSON.parse(localStorage.getItem("customers")||"[]")
 }
 
 function saveCustomer(){
-let c=getCustomers()
-c.push({name:custName.value,phone1:custPhone1.value,phone2:custPhone2.value,type:custType.value,m:Number(custMorning.value||0),e:Number(custEvening.value||0)})
-localStorage.setItem("customers",JSON.stringify(c))
-loadCustomers()
-custName.value=""; custPhone1.value=""; custPhone2.value=""; custMorning.value=""; custEvening.value=""
+  let c=getCustomers()
+  c.push({name:custName.value,phone1:custPhone1.value,phone2:custPhone2.value,type:custType.value,m:Number(custMorning.value||0),e:Number(custEvening.value||0)})
+  localStorage.setItem("customers",JSON.stringify(c))
+  loadCustomers()
+  custName.value=""; custPhone1.value=""; custPhone2.value=""; custMorning.value=""; custEvening.value=""
 }
 
 function loadCustomers(){
-let c=getCustomers(), html=""
-c.forEach((x,i)=>{
-html+="<div class='cust-item'>"+
-"<div class='cust-name'>"+x.name+"<br><small style='color:#888'>"+x.type+"</small></div>"+
-"<div class='cust-btns'>"+
-"<button class='smallbtn edit-btn' onclick='editCustomer("+i+")'>✏️ Edit</button>"+
-"<button class='smallbtn del-btn' onclick='deleteCustomer("+i+")'>🗑 Del</button>"+
-"</div></div>"
-})
-custList.innerHTML=html
+  let c=getCustomers(), html=""
+  c.forEach((x,i)=>{
+    html+="<div class='cust-item'>"+
+    "<div class='cust-name'>"+x.name+"<br><small style='color:#888'>"+x.type+"</small></div>"+
+    "<div class='cust-btns'>"+
+    "<button class='smallbtn edit-btn' onclick='editCustomer("+i+")'>✏️ Edit</button>"+
+    "<button class='smallbtn del-btn' onclick='deleteCustomer("+i+")'>🗑 Del</button>"+
+    "</div></div>"
+  })
+  custList.innerHTML=html
 }
 
 function deleteCustomer(i){
-if(!confirm("Delete this customer?")) return
-let c=getCustomers(); c.splice(i,1)
-localStorage.setItem("customers",JSON.stringify(c)); loadCustomers()
+  if(!confirm("Delete this customer?")) return
+  let c=getCustomers(); c.splice(i,1)
+  localStorage.setItem("customers",JSON.stringify(c)); loadCustomers()
 }
 
 function editCustomer(i){
-let c=getCustomers()[i]
-custName.value=c.name; custPhone1.value=c.phone1; custPhone2.value=c.phone2
-custType.value=c.type; custMorning.value=c.m; custEvening.value=c.e
-window.scrollTo(0,0)
+  let c=getCustomers()[i]
+  custName.value=c.name; custPhone1.value=c.phone1; custPhone2.value=c.phone2
+  custType.value=c.type; custMorning.value=c.m; custEvening.value=c.e
+  window.scrollTo(0,0)
 }
 
+// ---- ENTRY ----
 function loadEntry(){
-if(!entryDate.value) entryDate.value=new Date().toISOString().slice(0,10)
-let type=entryType.value
-let c=getCustomers().filter(x=>x.type==type)
-let html=""
-c.forEach(x=>{
-let def=entrySession.value=="m"?x.m:x.e
-html+="<div class='entry-row'>"+
-"<div class='row-name'>"+x.name+"</div>"+
-"<div class='qty-ctrl'>"+
-"<button class='qty-btn' onclick=\"changeQty('"+x.name+"',-0.5)\">▼</button>"+
-"<input type='number' step='0.5' min='0' id='qty_"+x.name+"' value='"+def+"'>"+
-"<button class='qty-btn' onclick=\"changeQty('"+x.name+"',0.5)\">▲</button>"+
-"</div>"+
-"<button class='cancel-btn' onclick=\"cancelEntry('"+x.name+"')\">✕</button>"+
-"</div>"
-})
-entryTable.innerHTML=html
+  if(!entryDate.value) entryDate.value=new Date().toISOString().slice(0,10)
+  let type=entryType.value
+  let c=getCustomers().filter(x=>x.type==type)
+  let html=""
+  c.forEach(x=>{
+    let def=entrySession.value=="m"?x.m:x.e
+    html+="<div class='entry-row'>"+
+    "<div class='row-name'>"+x.name+"</div>"+
+    "<div class='qty-ctrl'>"+
+    "<button class='qty-btn' onclick=\"changeQty('"+x.name+"',-0.5)\">▼</button>"+
+    "<input type='number' step='0.5' min='0' id='qty_"+x.name+"' value='"+def+"'>"+
+    "<button class='qty-btn' onclick=\"changeQty('"+x.name+"',0.5)\">▲</button>"+
+    "</div>"+
+    "<button class='cancel-btn' onclick=\"cancelEntry('"+x.name+"')\">✕</button>"+
+    "</div>"
+  })
+  entryTable.innerHTML=html
 }
 
 function changeQty(name,delta){
-let el=document.getElementById("qty_"+name)
-let val=Math.max(0,(Number(el.value)||0)+delta)
-el.value=Math.round(val*2)/2
+  let el=document.getElementById("qty_"+name)
+  let val=Math.max(0,(Number(el.value)||0)+delta)
+  el.value=Math.round(val*2)/2
 }
 
-function cancelEntry(name){
-document.getElementById("qty_"+name).value=0
-}
+function cancelEntry(name){ document.getElementById("qty_"+name).value=0 }
 
 function saveEntry(){
-let type=entryType.value, session=entrySession.value, date=entryDate.value
-let customers=getCustomers().filter(x=>x.type==type)
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-if(!entries[date]) entries[date]={}
-customers.forEach(x=>{
-let q=Number(document.getElementById("qty_"+x.name).value||0)
-if(!entries[date][x.name]) entries[date][x.name]={m:0,e:0}
-entries[date][x.name][session]=q
-})
-localStorage.setItem("entries",JSON.stringify(entries))
-alert("Saved ✅")
+  let type=entryType.value, session=entrySession.value, date=entryDate.value
+  let customers=getCustomers().filter(x=>x.type==type)
+  let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+  if(!entries[date]) entries[date]={}
+  customers.forEach(x=>{
+    let q=Number(document.getElementById("qty_"+x.name).value||0)
+    if(!entries[date][x.name]) entries[date][x.name]={m:0,e:0}
+    entries[date][x.name][session]=q
+  })
+  localStorage.setItem("entries",JSON.stringify(entries))
+  alert("Saved ✅")
 }
 
+// ---- BILLING ----
 function loadBillCustomers(){
-let c=getCustomers()
-let html="<option value='All'>All Customers</option>"
-c.forEach(x=>{ html+="<option>"+x.name+"</option>" })
-billCustomer.innerHTML=html
+  let c=getCustomers()
+  let html="<option value='All'>All Customers</option>"
+  c.forEach(x=>{ html+="<option value='"+x.name+"'>"+x.name+"</option>" })
+  billCustomer.innerHTML=html
+  updateBillFromDate()
+}
+
+function onBillFilterChange(){
+  // re-populate customer dropdown based on type filter
+  let type=billType.value
+  let c=getCustomers().filter(x=>type=="All"||x.type==type)
+  let html="<option value='All'>All Customers</option>"
+  c.forEach(x=>{ html+="<option value='"+x.name+"'>"+x.name+"</option>" })
+  billCustomer.innerHTML=html
+  updateBillFromDate()
+}
+
+function onBillCustomerChange(){
+  updateBillFromDate()
+}
+
+function updateBillFromDate(){
+  let cust=billCustomer.value
+  let bh=getBillHistory()
+  let hint=""
+  let fromDate=""
+
+  if(cust==="All"){
+    // get all currently shown customers
+    let type=billType.value
+    let names=getCustomers().filter(x=>type=="All"||x.type==type).map(x=>x.name)
+    fromDate=getNextFromDateAll(names)
+    if(fromDate){
+      hint="⬆ Auto-filled: day after last bill across all customers"
+    }
+  } else {
+    fromDate=getNextFromDate(cust)
+    if(fromDate){
+      let lastTo=bh[cust]&&bh[cust].lastTo
+      hint="⬆ Auto-filled: day after last bill ("+lastTo+")"
+    }
+  }
+
+  if(fromDate){
+    billFrom.value=fromDate
+    document.getElementById("billFromHint").innerText=hint
+    document.getElementById("billPeriodInfo").innerHTML=""
+  } else {
+    billFrom.value=""
+    document.getElementById("billFromHint").innerText=""
+    // show info if this is a new customer or never billed
+    if(cust!=="All"){
+      document.getElementById("billPeriodInfo").innerHTML=
+        "<div class='bill-info-box'>ℹ️ <b>"+cust+"</b> has no previous bill. Select From Date manually.</div>"
+    } else {
+      document.getElementById("billPeriodInfo").innerHTML=
+        "<div class='bill-info-box'>ℹ️ No previous bills found. Select From Date manually.</div>"
+    }
+  }
+  // always reset To Date to today
+  billTo.value=new Date().toISOString().slice(0,10)
 }
 
 function buildWaMessage(item){
-return "🐄 *Gopal Gaushala - Bill*\n\n"+
-"👤 Customer: *"+item.name+"*\n"+
-"📅 Period: "+item.from+" to "+item.to+"\n"+
-"🥛 Milk: *"+item.total+" L*\n"+
-"💲 Rate: ₹"+item.rate+" per L\n"+
-"🧾 Bill: *₹"+item.bill+"*\n"+
-"⚖️ Balance Due: *₹"+item.balance+"*\n\n"+
-"Please pay at your earliest. Thank you! 🙏"
+  return "🐄 *Gopal Gaushala - Bill*\n\n"+
+  "👤 Customer: *"+item.name+"*\n"+
+  "📅 Period: "+item.from+" to "+item.to+"\n"+
+  "🥛 Milk: *"+item.total+" L*\n"+
+  "💲 Rate: ₹"+item.rate+" per L\n"+
+  "🧾 Bill: *₹"+item.bill+"*\n"+
+  "⚖️ Balance Due: *₹"+item.balance+"*\n\n"+
+  "Please pay at your earliest. Thank you! 🙏"
+}
+
+function cleanPhone(p){ return (p||"").replace(/\D/g,"") }
+
+function openWa(phone, msg){
+  let p=cleanPhone(phone)
+  if(!p) return
+  window.open("https://wa.me/91"+p+"?text="+encodeURIComponent(msg),"_blank")
 }
 
 function getBalance(name){
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-let paid=0
-Object.keys(payments).forEach(d=>{
-if(payments[d][name]) paid+=Number(payments[d][name])
-})
-return paid
+  let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+  let paid=0
+  Object.keys(payments).forEach(d=>{ if(payments[d][name]) paid+=Number(payments[d][name]) })
+  return paid
 }
 
 function generateBills(){
-let c=getCustomers()
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-let from=new Date(billFrom.value), to=new Date(billTo.value)
-let type=billType.value, cust=billCustomer.value
-let html=""
-billData=[]
+  let c=getCustomers()
+  let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+  let from=new Date(billFrom.value), to=new Date(billTo.value)
 
-c.forEach(x=>{
-if(type!="All" && x.type!=type) return
-if(cust!="All" && x.name!=cust) return
-let total=0
-Object.keys(entries).forEach(d=>{
-let dt=new Date(d)
-if(dt>=from && dt<=to && entries[d][x.name])
-total+=Number(entries[d][x.name].m||0)+Number(entries[d][x.name].e||0)
-})
-let rate=Number(x.type=="Pickup"?ratePickup.value:rateDelivery.value)
-let bill=total*rate
-let paid=getBalance(x.name)
-let balance=bill-paid
+  if(!billFrom.value || !billTo.value){ alert("Please select From and To dates."); return }
+  if(from>to){ alert("From Date cannot be after To Date."); return }
 
-if(bill>0){
-let item={name:x.name, phone:x.phone1, total:total, rate:rate, bill:bill, paid:paid, balance:balance, from:billFrom.value, to:billTo.value}
-billData.push(item)
+  let type=billType.value, cust=billCustomer.value
+  let html=""
+  billData=[]
 
-let phone=x.phone1?x.phone1.replace(/\D/g,""):""
-let waMsg=encodeURIComponent(buildWaMessage(item))
-let waLink=phone?"https://wa.me/91"+phone+"?text="+waMsg:""
+  c.forEach(x=>{
+    if(type!="All" && x.type!=type) return
+    if(cust!="All" && x.name!=cust) return
+    let total=0
+    Object.keys(entries).forEach(d=>{
+      let dt=new Date(d)
+      if(dt>=from && dt<=to && entries[d][x.name])
+        total+=Number(entries[d][x.name].m||0)+Number(entries[d][x.name].e||0)
+    })
+    let rate=Number(x.type=="Pickup"?ratePickup.value:rateDelivery.value)
+    let bill=total*rate
+    let paid=getBalance(x.name)
+    let balance=bill-paid
 
-html+="<div class='bill-row'>"+
-"<div>"+
-"<div class='bill-name'>"+x.name+"</div>"+
-"<div class='bill-details'>"+
-"🥛 "+total+"L &nbsp;|&nbsp; ₹"+rate+"/L &nbsp;|&nbsp; 🧾 ₹"+bill+"<br>"+
-"✅ Paid: ₹"+paid+" &nbsp;|&nbsp; <b style='color:"+(balance>0?"#c0392b":"#27ae60")+"'>⚖️ Bal: ₹"+balance+"</b>"+
-"</div>"+
-"</div>"+
-(waLink?
-"<button class='wa-btn' onclick=\"window.open('"+waLink+"','_blank')\">📲 WhatsApp</button>":
-"<span style='font-size:11px;color:#aaa'>No phone</span>")+
-"</div>"
+    if(bill>0){
+      // save bill history for this customer
+      recordBillGenerated(x.name, billTo.value)
+
+      let item={name:x.name,phone1:x.phone1,phone2:x.phone2,total:total,rate:rate,bill:bill,paid:paid,balance:balance,from:billFrom.value,to:billTo.value}
+      billData.push(item)
+
+      let hasPhone=cleanPhone(x.phone1)||cleanPhone(x.phone2)
+      let waAction=hasPhone?
+        "<button class='wa-btn' onclick='sendSingleWa("+( billData.length-1)+")'>📲 WhatsApp</button>":
+        "<span style='font-size:11px;color:#aaa'>No phone</span>"
+
+      html+="<div class='bill-row'>"+
+      "<div>"+
+      "<div class='bill-name'>"+x.name+"</div>"+
+      "<div class='bill-details'>"+
+      "🥛 "+total+"L &nbsp;|&nbsp; ₹"+rate+"/L &nbsp;|&nbsp; 🧾 ₹"+bill+"<br>"+
+      "✅ Paid: ₹"+paid+" &nbsp;|&nbsp; <b style='color:"+(balance>0?"#c0392b":"#27ae60")+"'>⚖️ Bal: ₹"+balance+"</b>"+
+      "</div>"+
+      "</div>"+
+      waAction+
+      "</div>"
+    }
+  })
+
+  billResult.innerHTML=html||"<p style='color:#888'>No milk data found for this period.</p>"
+  let withPhone=billData.filter(x=>cleanPhone(x.phone1)||cleanPhone(x.phone2))
+  document.getElementById("waSendAllWrap").style.display=(withPhone.length>0)?"block":"none"
+
+  // refresh from date hint after generating
+  updateBillFromDate()
 }
-})
 
-billResult.innerHTML=html||"<p style='color:#888'>No data found.</p>"
-
-// Show send-all button only if multiple customers with phone
-let withPhone=billData.filter(x=>x.phone)
-document.getElementById("waSendAllWrap").style.display=(withPhone.length>1)?"block":"none"
+// ---- WHATSAPP ----
+function sendSingleWa(idx){
+  let item=billData[idx]
+  let msg=buildWaMessage(item)
+  let p1=cleanPhone(item.phone1), p2=cleanPhone(item.phone2)
+  if(p1 && p2){ showWaPicker(item.name,p1,p2,msg,null) }
+  else if(p1){ openWa(p1,msg) }
+  else if(p2){ openWa(p2,msg) }
 }
-
-// Send all one by one with confirm between each
-let waQueue=[], waIndex=0
 
 function sendAllWhatsApp(){
-waQueue=billData.filter(x=>x.phone)
-waIndex=0
-if(waQueue.length==0){ alert("No customers with phone numbers."); return }
-alert("WhatsApp will open for each customer one by one.\nPress OK to start. After each message opens, come back and press OK to continue.")
-sendNextWa()
+  waQueue=billData.filter(x=>cleanPhone(x.phone1)||cleanPhone(x.phone2))
+  waIndex=0
+  if(waQueue.length==0){ alert("No customers with phone numbers."); return }
+  processNextInQueue()
 }
 
-function sendNextWa(){
-if(waIndex>=waQueue.length){
-alert("✅ All bills sent!")
-return
-}
-let item=waQueue[waIndex]
-let phone=item.phone.replace(/\D/g,"")
-let waMsg=encodeURIComponent(buildWaMessage(item))
-let waLink="https://wa.me/91"+phone+"?text="+waMsg
-window.open(waLink,"_blank")
-waIndex++
-if(waIndex<waQueue.length){
-setTimeout(function(){
-if(confirm("Sent to "+item.name+".\nPress OK to open WhatsApp for next: "+waQueue[waIndex].name)){
-sendNextWa()
-}
-},1500)
-} else {
-setTimeout(function(){ alert("✅ All bills sent!") },1500)
-}
+function processNextInQueue(){
+  if(waIndex>=waQueue.length){ alert("✅ All bills sent!"); return }
+  let item=waQueue[waIndex]
+  let msg=buildWaMessage(item)
+  let p1=cleanPhone(item.phone1), p2=cleanPhone(item.phone2)
+  if(p1 && p2){
+    showWaPicker(item.name,p1,p2,msg,function(){
+      waIndex++
+      setTimeout(processNextInQueue,800)
+    })
+  } else {
+    openWa(p1||p2,msg)
+    waIndex++
+    if(waIndex<waQueue.length){
+      setTimeout(function(){
+        if(confirm("✅ Sent to "+item.name+".\n\nPress OK for next: "+waQueue[waIndex].name)){
+          processNextInQueue()
+        }
+      },1200)
+    } else {
+      setTimeout(function(){ alert("✅ All bills sent!") },1200)
+    }
+  }
 }
 
+function showWaPicker(name,p1,p2,msg,onDone){
+  document.getElementById("waModalTitle").innerText="📲 "+name
+  document.getElementById("waModalSub").innerText="Which number has WhatsApp?"
+  let btns=
+    "<button class='modal-num-btn' onclick='pickNumber(\""+p1+"\")'>📱 "+p1+"</button>"+
+    "<button class='modal-num-btn' onclick='pickNumber(\""+p2+"\")'>📱 "+p2+"</button>"+
+    "<button class='modal-both-btn' onclick='pickBoth()'>📲 Send on BOTH numbers</button>"+
+    "<button class='modal-skip-btn' onclick='skipNumber()'>⏭ Skip this customer</button>"
+  document.getElementById("waModalButtons").innerHTML=btns
+  document.getElementById("waModal").classList.add("active")
+  window._waCurrent={p1,p2,msg,onDone,name}
+}
+
+function pickNumber(phone){
+  closeWaModal()
+  openWa(phone,window._waCurrent.msg)
+  if(window._waCurrent.onDone){
+    let nextName=waIndex<waQueue.length?waQueue[waIndex].name:null
+    setTimeout(function(){
+      if(nextName){ if(confirm("✅ Sent to "+window._waCurrent.name+".\n\nOK for next: "+nextName)) window._waCurrent.onDone() }
+      else window._waCurrent.onDone()
+    },1200)
+  }
+}
+
+function pickBoth(){
+  closeWaModal()
+  let ctx=window._waCurrent
+  openWa(ctx.p1,ctx.msg)
+  setTimeout(function(){ openWa(ctx.p2,ctx.msg) },1500)
+  if(ctx.onDone){
+    let nextName=waIndex<waQueue.length?waQueue[waIndex].name:null
+    setTimeout(function(){
+      if(nextName){ if(confirm("✅ Sent to "+ctx.name+" on both.\n\nOK for next: "+nextName)) ctx.onDone() }
+      else ctx.onDone()
+    },2000)
+  }
+}
+
+function skipNumber(){
+  closeWaModal()
+  let ctx=window._waCurrent
+  if(ctx.onDone){
+    let nextName=waIndex<waQueue.length?waQueue[waIndex].name:null
+    if(nextName){ if(confirm("Skipped "+ctx.name+".\n\nOK for next: "+nextName)) ctx.onDone() }
+    else { ctx.onDone(); setTimeout(function(){ alert("✅ All bills processed!") },400) }
+  }
+}
+
+function closeWaModal(){ document.getElementById("waModal").classList.remove("active") }
+
+// ---- PAYMENT ----
 function loadPayCustomers(){
-let c=getCustomers(), html=""
-c.forEach(x=>{ html+="<option>"+x.name+"</option>" })
-payCustomer.innerHTML=html
-if(c.length>0){ payCustomer.value=c[0].name; loadBalance() }
+  let c=getCustomers(), html=""
+  c.forEach(x=>{ html+="<option>"+x.name+"</option>" })
+  payCustomer.innerHTML=html
+  if(c.length>0){ payCustomer.value=c[0].name; loadBalance() }
 }
 
 function getRate(name){
-let c=getCustomers().find(x=>x.name==name)
-if(!c) return 0
-return Number(c.type=="Pickup"?ratePickup.value:rateDelivery.value)
+  let c=getCustomers().find(x=>x.name==name)
+  if(!c) return 0
+  return Number(c.type=="Pickup"?ratePickup.value:rateDelivery.value)
 }
 
 function loadBalance(){
-let name=payCustomer.value
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-let rate=getRate(name), total=0
-Object.keys(entries).forEach(d=>{
-if(entries[d][name]) total+=Number(entries[d][name].m||0)+Number(entries[d][name].e||0)
-})
-let bill=total*rate, paid=0, historyRows=""
-let payDates=Object.keys(payments).filter(d=>payments[d][name]).sort()
-payDates.forEach(d=>{
-let amt=Number(payments[d][name]); paid+=amt
-historyRows+="<div class='pay-history-row'><div>"+d+"</div><div>₹"+amt+"</div></div>"
-})
-let bal=bill-paid
-let balClass=bal<=0?"bal clear":"bal"
-payInfo.innerHTML=
-"<div class='pay-summary'>"+
-"<div>🥛 Total Milk: <b>"+total+" L</b></div>"+
-"<div>📋 Total Bill: <b>₹"+bill+"</b></div>"+
-"<div>✅ Total Paid: <b>₹"+paid+"</b></div>"+
-"<div class='"+balClass+"'>⚖️ Balance: ₹"+bal+"</div>"+
-"</div>"+
-(historyRows?"<div class='section-title'>Payment History</div><div class='pay-history'>"+
-"<div class='pay-history-row'><b>Date</b><b>Amount</b></div>"+historyRows+"</div>":"")
+  let name=payCustomer.value
+  let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+  let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+  let rate=getRate(name), total=0
+  Object.keys(entries).forEach(d=>{
+    if(entries[d][name]) total+=Number(entries[d][name].m||0)+Number(entries[d][name].e||0)
+  })
+  let bill=total*rate, paid=0, historyRows=""
+  let payDates=Object.keys(payments).filter(d=>payments[d][name]).sort()
+  payDates.forEach(d=>{
+    let amt=Number(payments[d][name]); paid+=amt
+    historyRows+="<div class='pay-history-row'><div>"+d+"</div><div>₹"+amt+"</div></div>"
+  })
+  let bal=bill-paid
+  let balClass=bal<=0?"bal clear":"bal"
+  payInfo.innerHTML=
+    "<div class='pay-summary'>"+
+    "<div>🥛 Total Milk: <b>"+total+" L</b></div>"+
+    "<div>📋 Total Bill: <b>₹"+bill+"</b></div>"+
+    "<div>✅ Total Paid: <b>₹"+paid+"</b></div>"+
+    "<div class='"+balClass+"'>⚖️ Balance: ₹"+bal+"</div>"+
+    "</div>"+
+    (historyRows?"<div class='section-title'>Payment History</div><div class='pay-history'>"+
+    "<div class='pay-history-row'><b>Date</b><b>Amount</b></div>"+historyRows+"</div>":"")
 }
 
 function savePayment(){
-let name=payCustomer.value, amt=Number(payAmount.value)
-if(!amt){ alert("Enter amount"); return }
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-let d=new Date().toISOString().slice(0,10)
-if(!payments[d]) payments[d]={}
-payments[d][name]=(payments[d][name]||0)+amt
-localStorage.setItem("payments",JSON.stringify(payments))
-payAmount.value=""; alert("Payment saved ✅"); loadBalance()
+  let name=payCustomer.value, amt=Number(payAmount.value)
+  if(!amt){ alert("Enter amount"); return }
+  let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+  let d=new Date().toISOString().slice(0,10)
+  if(!payments[d]) payments[d]={}
+  payments[d][name]=(payments[d][name]||0)+amt
+  localStorage.setItem("payments",JSON.stringify(payments))
+  payAmount.value=""; alert("Payment saved ✅"); loadBalance()
 }
 
+// ---- LEDGER ----
 function loadLedgerCustomers(){
-let c=getCustomers()
-let html="<option value='All'>All Customers</option>"
-c.forEach(x=>{ html+="<option value='"+x.name+"'>"+x.name+"</option>" })
-ledgerCustomer.innerHTML=html
-ledgerType.onchange=function(){
-let type=ledgerType.value
-let html="<option value='All'>All Customers</option>"
-getCustomers().filter(x=>type=="All"||x.type==type).forEach(x=>{
-html+="<option value='"+x.name+"'>"+x.name+"</option>"
-})
-ledgerCustomer.innerHTML=html
-}
+  let c=getCustomers()
+  let html="<option value='All'>All Customers</option>"
+  c.forEach(x=>{ html+="<option value='"+x.name+"'>"+x.name+"</option>" })
+  ledgerCustomer.innerHTML=html
+  ledgerType.onchange=function(){
+    let type=ledgerType.value
+    let html="<option value='All'>All Customers</option>"
+    getCustomers().filter(x=>type=="All"||x.type==type).forEach(x=>{
+      html+="<option value='"+x.name+"'>"+x.name+"</option>"
+    })
+    ledgerCustomer.innerHTML=html
+  }
 }
 
 function loadLedger(){
-let c=getCustomers()
-let entries=JSON.parse(localStorage.getItem("entries")||"{}")
-let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-let from=new Date(ledgerFrom.value), to=new Date(ledgerTo.value)
-let filterType=ledgerType.value, filterCust=ledgerCustomer.value, html=""
-c.forEach(x=>{
-if(filterType!="All" && x.type!=filterType) return
-if(filterCust!="All" && x.name!=filterCust) return
-let total=0
-Object.keys(entries).forEach(d=>{
-let dt=new Date(d)
-if(dt>=from && dt<=to && entries[d][x.name])
-total+=Number(entries[d][x.name].m||0)+Number(entries[d][x.name].e||0)
-})
-let rate=Number(x.type=="Pickup"?ratePickup.value:rateDelivery.value)
-let bill=total*rate, paid=0
-Object.keys(payments).forEach(d=>{
-if(payments[d][x.name]) paid+=Number(payments[d][x.name])
-})
-let bal=bill-paid
-html+="<div class='table' style='background:"+(bal>0?"#fff5f5":"#f5fff5")+";border-radius:4px;padding:5px;margin-bottom:4px'>"+
-"<div>"+x.name+"</div><div>"+total+"L</div><div>₹"+rate+"</div><div>₹"+bill+"</div>"+
-"<div style='color:"+(bal>0?"#c0392b":"#27ae60")+"'><b>₹"+bal+"</b></div></div>"
-})
-ledgerResult.innerHTML=html||"<p style='color:#888'>No data found.</p>"
+  let c=getCustomers()
+  let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+  let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+  let from=new Date(ledgerFrom.value), to=new Date(ledgerTo.value)
+  let filterType=ledgerType.value, filterCust=ledgerCustomer.value, html=""
+  c.forEach(x=>{
+    if(filterType!="All" && x.type!=filterType) return
+    if(filterCust!="All" && x.name!=filterCust) return
+    let total=0
+    Object.keys(entries).forEach(d=>{
+      let dt=new Date(d)
+      if(dt>=from && dt<=to && entries[d][x.name])
+        total+=Number(entries[d][x.name].m||0)+Number(entries[d][x.name].e||0)
+    })
+    let rate=Number(x.type=="Pickup"?ratePickup.value:rateDelivery.value)
+    let bill=total*rate, paid=0
+    Object.keys(payments).forEach(d=>{
+      if(payments[d][x.name]) paid+=Number(payments[d][x.name])
+    })
+    let bal=bill-paid
+    html+="<div class='table' style='background:"+(bal>0?"#fff5f5":"#f5fff5")+";border-radius:4px;padding:5px;margin-bottom:4px'>"+
+    "<div>"+x.name+"</div><div>"+total+"L</div><div>₹"+rate+"</div><div>₹"+bill+"</div>"+
+    "<div style='color:"+(bal>0?"#c0392b":"#27ae60")+"'><b>₹"+bal+"</b></div></div>"
+  })
+  ledgerResult.innerHTML=html||"<p style='color:#888'>No data found.</p>"
 }
 
+// ---- SETTINGS ----
 function saveRates(){
-localStorage.setItem("ratePickup",ratePickup.value)
-localStorage.setItem("rateDelivery",rateDelivery.value)
-alert("Rates saved ✅")
+  localStorage.setItem("ratePickup",ratePickup.value)
+  localStorage.setItem("rateDelivery",rateDelivery.value)
+  alert("Rates saved ✅")
 }
 
+// ---- BACKUP ----
 function exportData(){
-let data={customers:JSON.parse(localStorage.getItem("customers")||"[]"),entries:JSON.parse(localStorage.getItem("entries")||"{}"),payments:JSON.parse(localStorage.getItem("payments")||"{}"),ratePickup:localStorage.getItem("ratePickup")||"90",rateDelivery:localStorage.getItem("rateDelivery")||"100",exportedAt:new Date().toISOString()}
-let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"})
-let a=document.createElement("a")
-a.href=URL.createObjectURL(blob)
-a.download="gaushala_backup_"+new Date().toISOString().slice(0,10)+".json"
-a.click()
+  let data={
+    customers:JSON.parse(localStorage.getItem("customers")||"[]"),
+    entries:JSON.parse(localStorage.getItem("entries")||"{}"),
+    payments:JSON.parse(localStorage.getItem("payments")||"{}"),
+    billHistory:JSON.parse(localStorage.getItem("billHistory")||"{}"),
+    ratePickup:localStorage.getItem("ratePickup")||"90",
+    rateDelivery:localStorage.getItem("rateDelivery")||"100",
+    exportedAt:new Date().toISOString()
+  }
+  let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"})
+  let a=document.createElement("a")
+  a.href=URL.createObjectURL(blob)
+  a.download="gaushala_backup_"+new Date().toISOString().slice(0,10)+".json"
+  a.click()
 }
 
 function importData(){
-let file=document.getElementById("restoreFile").files[0]
-if(!file){ alert("Please select a backup file"); return }
-if(!confirm("This will OVERWRITE all current data. Continue?")) return
-let reader=new FileReader()
-reader.onload=function(e){
-try{
-let data=JSON.parse(e.target.result)
-if(data.customers) localStorage.setItem("customers",JSON.stringify(data.customers))
-if(data.entries) localStorage.setItem("entries",JSON.stringify(data.entries))
-if(data.payments) localStorage.setItem("payments",JSON.stringify(data.payments))
-if(data.ratePickup) localStorage.setItem("ratePickup",data.ratePickup)
-if(data.rateDelivery) localStorage.setItem("rateDelivery",data.rateDelivery)
-alert("Data restored ✅ Reloading..."); location.reload()
-}catch(err){ alert("Invalid backup file.") }
-}
-reader.readAsText(file)
+  let file=document.getElementById("restoreFile").files[0]
+  if(!file){ alert("Please select a backup file"); return }
+  if(!confirm("This will OVERWRITE all current data. Continue?")) return
+  let reader=new FileReader()
+  reader.onload=function(e){
+    try{
+      let data=JSON.parse(e.target.result)
+      if(data.customers) localStorage.setItem("customers",JSON.stringify(data.customers))
+      if(data.entries) localStorage.setItem("entries",JSON.stringify(data.entries))
+      if(data.payments) localStorage.setItem("payments",JSON.stringify(data.payments))
+      if(data.billHistory) localStorage.setItem("billHistory",JSON.stringify(data.billHistory))
+      if(data.ratePickup) localStorage.setItem("ratePickup",data.ratePickup)
+      if(data.rateDelivery) localStorage.setItem("rateDelivery",data.rateDelivery)
+      alert("Data restored ✅ Reloading..."); location.reload()
+    }catch(err){ alert("Invalid backup file.") }
+  }
+  reader.readAsText(file)
 }
 
 // Init
