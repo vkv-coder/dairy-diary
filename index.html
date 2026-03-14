@@ -10,30 +10,27 @@ body{font-family:Arial;background:#eef1f5;margin:0}
 .header{background:#2f69c6;color:#fff;text-align:center;padding:12px;font-size:20px;font-weight:bold}
 .container{padding:15px;max-width:520px;margin:auto}
 
-/* HOME GRID MENU */
 .menu{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .menu button{padding:22px 10px;font-size:15px;background:#2f69c6;color:#fff;border:none;border-radius:10px;font-weight:bold;line-height:1.6;cursor:pointer}
 .menu button:active{background:#1a4fa0}
 .menu .full{grid-column:span 2;background:#1a7a4a}
 
-/* INPUTS */
 input,select{width:100%;padding:12px;margin:6px 0;box-sizing:border-box;border:1px solid #ccc;border-radius:6px;font-size:15px}
 select{height:48px}
 
-/* DATE WRAPPER */
 .date-wrap{position:relative;margin:6px 0}
 .date-wrap input[type=date]{padding-right:40px;width:100%;box-sizing:border-box;font-size:15px;height:48px;border:1px solid #ccc;border-radius:6px;padding-left:10px}
 .date-wrap .cal-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none}
 .date-label{font-size:13px;color:#444;font-weight:bold;margin-top:10px;margin-bottom:0}
 
-/* BUTTONS */
 button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;cursor:pointer;font-size:14px}
 .back{background:#444;width:100%;margin-top:10px}
 .save-btn{background:#27ae60;padding:12px 20px;width:100%;margin-top:6px}
 .backup-btn{background:#27ae60;width:100%;margin-top:8px}
 .restore-btn{background:#e67e22;width:100%;margin-top:8px}
+.wa-btn{background:#25D366;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.wa-all-btn{background:#25D366;color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;cursor:pointer;width:100%;margin-top:8px;font-weight:bold}
 
-/* ENTRY ROW */
 .entry-row{background:#fff;padding:10px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .row-name{font-size:15px;font-weight:bold;flex:1}
 .qty-ctrl{display:flex;align-items:center;gap:5px}
@@ -41,7 +38,6 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 .qty-btn{width:36px;height:36px;font-size:18px;padding:0;border-radius:6px;background:#2f69c6;color:#fff;border:none;cursor:pointer;flex-shrink:0;line-height:1}
 .cancel-btn{background:#e74c3c;padding:8px 10px;font-size:12px;border-radius:6px;color:#fff;border:none;cursor:pointer;white-space:nowrap}
 
-/* CUSTOMER LIST */
 .cust-item{padding:12px 0;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between}
 .cust-name{font-size:15px;flex:1}
 .cust-btns{display:flex;gap:12px}
@@ -49,10 +45,12 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 .edit-btn{background:#2f69c6}
 .del-btn{background:#e74c3c}
 
-/* TABLE */
+.bill-row{background:#fff;border-radius:6px;padding:8px 10px;margin-bottom:6px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,0.07)}
+.bill-details{font-size:13px;line-height:1.7}
+.bill-name{font-size:15px;font-weight:bold}
+
 .table{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:4px;margin-bottom:4px;font-size:13px;align-items:center}
 
-/* PAYMENT */
 .pay-summary{background:#fff;border-radius:8px;padding:12px;margin:10px 0;border-left:4px solid #2f69c6}
 .pay-summary .bal{font-size:18px;font-weight:bold;color:#c0392b;margin-top:6px}
 .pay-summary .bal.clear{color:#27ae60}
@@ -60,8 +58,6 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 .pay-history-row{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:5px 0;border-bottom:1px solid #eee;font-size:14px}
 .pay-history-row:last-child{border-bottom:none}
 .section-title{font-size:13px;color:#666;margin:8px 0 2px;font-weight:bold}
-
-/* FILTER ROW */
 .filter-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 </style>
 </head>
@@ -110,7 +106,7 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 <div id="customer" style="display:none">
 <h3>Customer Master</h3>
 <input id="custName" placeholder="Customer Name">
-<input id="custPhone1" placeholder="Phone 1" type="tel">
+<input id="custPhone1" placeholder="Phone 1 (for WhatsApp)" type="tel">
 <input id="custPhone2" placeholder="Phone 2" type="tel">
 <select id="custType">
 <option>Pickup</option>
@@ -147,10 +143,10 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 <span class="cal-icon">📅</span>
 </div>
 <button onclick="generateBills()" style="width:100%;margin-top:8px">🧾 GENERATE BILL</button>
-<div class="table" style="margin-top:10px;font-weight:bold">
-<div>Name</div><div>Milk</div><div>Rate</div><div>Bill</div><div></div>
+<div id="billResult" style="margin-top:10px"></div>
+<div id="waSendAllWrap" style="display:none">
+<button class="wa-all-btn" onclick="sendAllWhatsApp()">📲 SEND ALL BILLS ON WHATSAPP</button>
 </div>
-<div id="billResult"></div>
 <button class="back" onclick="openPage('home')">BACK</button>
 </div>
 
@@ -222,6 +218,9 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 </div>
 
 <script>
+
+// ---- bill data store for WhatsApp ----
+let billData = []
 
 function openPage(p){
 ["home","entry","customer","billing","payment","ledger","settings","backup"].forEach(x=>document.getElementById(x).style.display="none")
@@ -322,11 +321,34 @@ c.forEach(x=>{ html+="<option>"+x.name+"</option>" })
 billCustomer.innerHTML=html
 }
 
+function buildWaMessage(item){
+return "🐄 *Gopal Gaushala - Bill*\n\n"+
+"👤 Customer: *"+item.name+"*\n"+
+"📅 Period: "+item.from+" to "+item.to+"\n"+
+"🥛 Milk: *"+item.total+" L*\n"+
+"💲 Rate: ₹"+item.rate+" per L\n"+
+"🧾 Bill: *₹"+item.bill+"*\n"+
+"⚖️ Balance Due: *₹"+item.balance+"*\n\n"+
+"Please pay at your earliest. Thank you! 🙏"
+}
+
+function getBalance(name){
+let payments=JSON.parse(localStorage.getItem("payments")||"{}")
+let paid=0
+Object.keys(payments).forEach(d=>{
+if(payments[d][name]) paid+=Number(payments[d][name])
+})
+return paid
+}
+
 function generateBills(){
 let c=getCustomers()
 let entries=JSON.parse(localStorage.getItem("entries")||"{}")
 let from=new Date(billFrom.value), to=new Date(billTo.value)
-let type=billType.value, cust=billCustomer.value, html=""
+let type=billType.value, cust=billCustomer.value
+let html=""
+billData=[]
+
 c.forEach(x=>{
 if(type!="All" && x.type!=type) return
 if(cust!="All" && x.name!=cust) return
@@ -338,12 +360,70 @@ total+=Number(entries[d][x.name].m||0)+Number(entries[d][x.name].e||0)
 })
 let rate=Number(x.type=="Pickup"?ratePickup.value:rateDelivery.value)
 let bill=total*rate
+let paid=getBalance(x.name)
+let balance=bill-paid
+
 if(bill>0){
-html+="<div class='table' style='background:#fff;border-radius:4px;padding:5px;margin-bottom:4px'>"+
-"<div>"+x.name+"</div><div>"+total+"L</div><div>₹"+rate+"</div><div>₹"+bill+"</div><div></div></div>"
+let item={name:x.name, phone:x.phone1, total:total, rate:rate, bill:bill, paid:paid, balance:balance, from:billFrom.value, to:billTo.value}
+billData.push(item)
+
+let phone=x.phone1?x.phone1.replace(/\D/g,""):""
+let waMsg=encodeURIComponent(buildWaMessage(item))
+let waLink=phone?"https://wa.me/91"+phone+"?text="+waMsg:""
+
+html+="<div class='bill-row'>"+
+"<div>"+
+"<div class='bill-name'>"+x.name+"</div>"+
+"<div class='bill-details'>"+
+"🥛 "+total+"L &nbsp;|&nbsp; ₹"+rate+"/L &nbsp;|&nbsp; 🧾 ₹"+bill+"<br>"+
+"✅ Paid: ₹"+paid+" &nbsp;|&nbsp; <b style='color:"+(balance>0?"#c0392b":"#27ae60")+"'>⚖️ Bal: ₹"+balance+"</b>"+
+"</div>"+
+"</div>"+
+(waLink?
+"<button class='wa-btn' onclick=\"window.open('"+waLink+"','_blank')\">📲 WhatsApp</button>":
+"<span style='font-size:11px;color:#aaa'>No phone</span>")+
+"</div>"
 }
 })
+
 billResult.innerHTML=html||"<p style='color:#888'>No data found.</p>"
+
+// Show send-all button only if multiple customers with phone
+let withPhone=billData.filter(x=>x.phone)
+document.getElementById("waSendAllWrap").style.display=(withPhone.length>1)?"block":"none"
+}
+
+// Send all one by one with confirm between each
+let waQueue=[], waIndex=0
+
+function sendAllWhatsApp(){
+waQueue=billData.filter(x=>x.phone)
+waIndex=0
+if(waQueue.length==0){ alert("No customers with phone numbers."); return }
+alert("WhatsApp will open for each customer one by one.\nPress OK to start. After each message opens, come back and press OK to continue.")
+sendNextWa()
+}
+
+function sendNextWa(){
+if(waIndex>=waQueue.length){
+alert("✅ All bills sent!")
+return
+}
+let item=waQueue[waIndex]
+let phone=item.phone.replace(/\D/g,"")
+let waMsg=encodeURIComponent(buildWaMessage(item))
+let waLink="https://wa.me/91"+phone+"?text="+waMsg
+window.open(waLink,"_blank")
+waIndex++
+if(waIndex<waQueue.length){
+setTimeout(function(){
+if(confirm("Sent to "+item.name+".\nPress OK to open WhatsApp for next: "+waQueue[waIndex].name)){
+sendNextWa()
+}
+},1500)
+} else {
+setTimeout(function(){ alert("✅ All bills sent!") },1500)
+}
 }
 
 function loadPayCustomers(){
