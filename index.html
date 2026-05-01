@@ -79,7 +79,7 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 </head>
 
 <body>
-<div class="header" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 12px"><img src="cow.png" alt="Gir Cow" style="height:52px;border-radius:6px;object-fit:contain"><span style="font-size:22px;font-weight:bold;font-family:Arial,sans-serif">गोपाल गौ मंदिरम्</span></div>
+<div class="header" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 12px"><img src="cow.png" alt="Gir Cow" style="height:52px;border-radius:6px;object-fit:contain"><span style="font-size:22px;font-weight:bold;font-family:Arial,sans-serif"><span style="color:#ff4444">गो</span>पाल <span style="color:#ff4444">गौ</span> मंदिर<span style="color:#ff4444">म्</span></span></div>
 <div class="container">
 
 <!-- HOME -->
@@ -458,7 +458,7 @@ function updateBillFromDate(){
 }
 
 function buildWaMessage(item){
-  return "🐄 *गोपाल गौ मंदिरम् - Bill*\n\n"+
+  return "*गोपाल गौ मंदिरम् - Bill*\n\n"+
   "👤 Customer: *"+item.name+"*\n"+
   "📅 Period: "+item.from+" to "+item.to+"\n"+
   "🥛 Milk: *"+item.total+" L*\n"+
