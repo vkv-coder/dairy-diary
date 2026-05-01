@@ -7,9 +7,7 @@
 
 <style>
 body{font-family:Arial;background:#eef1f5;margin:0}
-.header{background:#2f69c6;color:#fff;text-align:center;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:10px}
-.header img{height:52px;border-radius:6px;object-fit:contain;background:transparent}
-.header-text{font-size:22px;font-weight:bold;font-family:'Noto Sans Devanagari',Arial,sans-serif;line-height:1.2}
+.header{background:#2f69c6;color:#fff;text-align:center;padding:12px;font-size:20px;font-weight:bold}
 .container{padding:15px;max-width:520px;margin:auto}
 
 .menu{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
@@ -81,10 +79,7 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 </head>
 
 <body>
-<div class="header">
-  <img src="cow.png" alt="Gir Cow">
-  <div class="header-text">गोपाल गौ मंदिरम्</div>
-</div>
+<div class="header" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 12px"><img src="cow.png" alt="Gir Cow" style="height:52px;border-radius:6px;object-fit:contain"><span style="font-size:22px;font-weight:bold;font-family:Arial,sans-serif">गोपाल गौ मंदिरम्</span></div>
 <div class="container">
 
 <!-- HOME -->
@@ -260,6 +255,8 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 let billData = []
 let waQueue = [], waIndex = 0
 
+// ---- BILL HISTORY per customer ----
+// stored as { customerName: { lastTo: "YYYY-MM-DD" } }
 function getBillHistory(){
   return JSON.parse(localStorage.getItem("billHistory")||"{}")
 }
@@ -267,6 +264,7 @@ function saveBillHistory(bh){
   localStorage.setItem("billHistory", JSON.stringify(bh))
 }
 
+// returns next from date for a customer (lastTo + 1 day), or null if never billed
 function getNextFromDate(name){
   if(!name || name==="All") return null
   let bh=getBillHistory()
@@ -276,6 +274,7 @@ function getNextFromDate(name){
   return d.toISOString().slice(0,10)
 }
 
+// for "All" — find the latest lastTo across all shown customers, +1 day
 function getNextFromDateAll(names){
   let bh=getBillHistory()
   let latest=null
@@ -293,6 +292,7 @@ function getNextFromDateAll(names){
 function recordBillGenerated(name, fromDate, toDate){
   let bh=getBillHistory()
   if(!bh[name]) bh[name]={}
+  // only update if new toDate is later
   if(!bh[name].lastTo || toDate > bh[name].lastTo){
     bh[name].lastFrom = fromDate
     bh[name].lastTo = toDate
@@ -300,6 +300,7 @@ function recordBillGenerated(name, fromDate, toDate){
   saveBillHistory(bh)
 }
 
+// ---- PAGE NAV ----
 function openPage(p){
   ["home","entry","customer","billing","payment","ledger","settings","backup"].forEach(x=>document.getElementById(x).style.display="none")
   document.getElementById(p).style.display="block"
@@ -348,6 +349,7 @@ function editCustomer(i){
   window.scrollTo(0,0)
 }
 
+// ---- ENTRY ----
 function loadEntry(){
   if(!entryDate.value) entryDate.value=new Date().toISOString().slice(0,10)
   let type=entryType.value
@@ -358,11 +360,11 @@ function loadEntry(){
     html+="<div class='entry-row'>"+
     "<div class='row-name'>"+x.name+"</div>"+
     "<div class='qty-ctrl'>"+
-    "<button class='qty-btn' onclick=\"changeQty('"+x.name+"',-0.5)\">▼</button>"+
+    "<button class='qty-btn' onclick="changeQty('"+x.name+"',-0.5)">▼</button>"+
     "<input type='number' step='0.5' min='0' id='qty_"+x.name+"' value='"+def+"'>"+
-    "<button class='qty-btn' onclick=\"changeQty('"+x.name+"',0.5)\">▲</button>"+
+    "<button class='qty-btn' onclick="changeQty('"+x.name+"',0.5)">▲</button>"+
     "</div>"+
-    "<button class='cancel-btn' onclick=\"cancelEntry('"+x.name+"')\" >✕</button>"+
+    "<button class='cancel-btn' onclick="cancelEntry('"+x.name+"')">✕</button>"+
     "</div>"
   })
   entryTable.innerHTML=html
@@ -390,6 +392,7 @@ function saveEntry(){
   alert("Saved ✅")
 }
 
+// ---- BILLING ----
 function loadBillCustomers(){
   let c=getCustomers()
   let html="<option value='All'>All Customers</option>"
@@ -399,6 +402,7 @@ function loadBillCustomers(){
 }
 
 function onBillFilterChange(){
+  // re-populate customer dropdown based on type filter
   let type=billType.value
   let c=getCustomers().filter(x=>type=="All"||x.type==type)
   let html="<option value='All'>All Customers</option>"
@@ -418,6 +422,7 @@ function updateBillFromDate(){
   let fromDate=""
 
   if(cust==="All"){
+    // get all currently shown customers
     let type=billType.value
     let names=getCustomers().filter(x=>type=="All"||x.type==type).map(x=>x.name)
     fromDate=getNextFromDateAll(names)
@@ -439,6 +444,7 @@ function updateBillFromDate(){
   } else {
     billFrom.value=""
     document.getElementById("billFromHint").innerText=""
+    // show info if this is a new customer or never billed
     if(cust!=="All"){
       document.getElementById("billPeriodInfo").innerHTML=
         "<div class='bill-info-box'>ℹ️ <b>"+cust+"</b> has no previous bill. Select From Date manually.</div>"
@@ -447,6 +453,7 @@ function updateBillFromDate(){
         "<div class='bill-info-box'>ℹ️ No previous bills found. Select From Date manually.</div>"
     }
   }
+  // always reset To Date to today
   billTo.value=new Date().toISOString().slice(0,10)
 }
 
@@ -503,11 +510,13 @@ function generateBills(){
     let balance=bill-paid
 
     if(bill>0){
+      // get previous bill period BEFORE recording new one
       let bhNow=getBillHistory()
       let prevFrom=bhNow[x.name]&&bhNow[x.name].lastFrom?bhNow[x.name].lastFrom:null
       let prevTo=bhNow[x.name]&&bhNow[x.name].lastTo?bhNow[x.name].lastTo:null
       let lastPeriodStr=prevFrom&&prevTo?"📅 Last: "+prevFrom+" → "+prevTo:"📅 Last: First bill"
 
+      // save bill history for this customer
       recordBillGenerated(x.name, billFrom.value, billTo.value)
 
       let item={name:x.name,phone1:x.phone1,phone2:x.phone2,total:total,rate:rate,bill:bill,paid:paid,balance:balance,from:billFrom.value,to:billTo.value}
@@ -525,7 +534,7 @@ function generateBills(){
       "<span style='color:#888;font-size:12px'>"+lastPeriodStr+"</span><br>"+
       "<span style='color:#2f69c6;font-size:12px'>🆕 Current: "+billFrom.value+" → "+billTo.value+"</span><br>"+
       "🥛 "+total+"L &nbsp;|&nbsp; ₹"+rate+"/L &nbsp;|&nbsp; 🧾 ₹"+bill+"<br>"+
-      "✅ Paid: ₹"+paid+" &nbsp;|&nbsp; <b style='color:"+(balance>0?"#c0392b":"#27ae60")+"'">⚖️ Bal: ₹"+balance+"</b>"+
+      "✅ Paid: ₹"+paid+" &nbsp;|&nbsp; <b style='color:"+(balance>0?"#c0392b":"#27ae60")+"'>⚖️ Bal: ₹"+balance+"</b>"+
       "</div>"+
       "</div>"+
       waAction+
@@ -537,9 +546,11 @@ function generateBills(){
   let withPhone=billData.filter(x=>cleanPhone(x.phone1)||cleanPhone(x.phone2))
   document.getElementById("waSendAllWrap").style.display=(withPhone.length>0)?"block":"none"
 
+  // refresh from date hint after generating
   updateBillFromDate()
 }
 
+// ---- WHATSAPP ----
 function sendSingleWa(idx){
   let item=billData[idx]
   let msg=buildWaMessage(item)
@@ -632,6 +643,7 @@ function skipNumber(){
 
 function closeWaModal(){ document.getElementById("waModal").classList.remove("active") }
 
+// ---- PAYMENT ----
 function loadPayCustomers(){
   let c=getCustomers(), html=""
   c.forEach(x=>{ html+="<option>"+x.name+"</option>" })
@@ -683,6 +695,7 @@ function savePayment(){
   payAmount.value=""; alert("Payment saved ✅"); loadBalance()
 }
 
+// ---- LEDGER ----
 function loadLedgerCustomers(){
   let c=getCustomers()
   let html="<option value='All'>All Customers</option>"
@@ -726,12 +739,14 @@ function loadLedger(){
   ledgerResult.innerHTML=html||"<p style='color:#888'>No data found.</p>"
 }
 
+// ---- SETTINGS ----
 function saveRates(){
   localStorage.setItem("ratePickup",ratePickup.value)
   localStorage.setItem("rateDelivery",rateDelivery.value)
   alert("Rates saved ✅")
 }
 
+// ---- BACKUP ----
 function exportData(){
   let data={
     customers:JSON.parse(localStorage.getItem("customers")||"[]"),
@@ -769,6 +784,7 @@ function importData(){
   reader.readAsText(file)
 }
 
+// Init
 ratePickup.value=localStorage.getItem("ratePickup")||90
 rateDelivery.value=localStorage.getItem("rateDelivery")||100
 entryDate.value=new Date().toISOString().slice(0,10)
