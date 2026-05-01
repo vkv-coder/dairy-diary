@@ -360,11 +360,11 @@ function loadEntry(){
     html+="<div class='entry-row'>"+
     "<div class='row-name'>"+x.name+"</div>"+
     "<div class='qty-ctrl'>"+
-    "<button class='qty-btn' onclick="changeQty('"+x.name+"',-0.5)">▼</button>"+
+    "<button class='qty-btn' onclick=\"changeQty('"+x.name+"',-0.5)\">▼</button>"+
     "<input type='number' step='0.5' min='0' id='qty_"+x.name+"' value='"+def+"'>"+
-    "<button class='qty-btn' onclick="changeQty('"+x.name+"',0.5)">▲</button>"+
+    "<button class='qty-btn' onclick=\"changeQty('"+x.name+"',0.5)\">▲</button>"+
     "</div>"+
-    "<button class='cancel-btn' onclick="cancelEntry('"+x.name+"')">✕</button>"+
+    "<button class='cancel-btn' onclick=\"cancelEntry('"+x.name+"')\">✕</button>"+
     "</div>"
   })
   entryTable.innerHTML=html
