@@ -353,21 +353,58 @@ function editCustomer(i){
 function loadEntry(){
   if(!entryDate.value) entryDate.value=new Date().toISOString().slice(0,10)
   let type=entryType.value
+  let session=entrySession.value
+  let date=entryDate.value
   let c=getCustomers().filter(x=>x.type==type)
-  let html=""
+  let entries=JSON.parse(localStorage.getItem("entries")||"{}")
+
+  function getPrevEntry(name){
+    let d=new Date(date)
+    for(let i=1;i<=7;i++){
+      d.setDate(d.getDate()-1)
+      let ds=d.toISOString().slice(0,10)
+      if(entries[ds] && entries[ds][name] && entries[ds][name][session]!==undefined)
+        return entries[ds][name][session]
+    }
+    return null
+  }
+
+  entryTable.innerHTML=""
   c.forEach(x=>{
-    let def=entrySession.value=="m"?x.m:x.e
-    html+="<div class='entry-row'>"+
-    "<div class='row-name'>"+x.name+"</div>"+
-    "<div class='qty-ctrl'>"+
-    "<button class='qty-btn' onclick=\"changeQty('"+x.name+"',-0.5)\">▼</button>"+
-    "<input type='number' step='0.5' min='0' id='qty_"+x.name+"' value='"+def+"'>"+
-    "<button class='qty-btn' onclick=\"changeQty('"+x.name+"',0.5)\">▲</button>"+
-    "</div>"+
-    "<button class='cancel-btn' onclick=\"cancelEntry('"+x.name+"')\">✕</button>"+
-    "</div>"
+    let master=session=="m"?x.m:x.e
+    let qty=master
+    let source="master"
+
+    if(entries[date] && entries[date][x.name] && entries[date][x.name][session]!==undefined){
+      qty=entries[date][x.name][session]
+      source="saved"
+    } else {
+      let prev=getPrevEntry(x.name)
+      if(prev!==null){ qty=prev; source="prev" }
+    }
+
+    let isMaster=(Number(qty)===Number(master))
+    let inputStyle=isMaster
+      ? "width:60px;text-align:center;padding:8px 2px;margin:0;font-size:16px;font-weight:bold;"
+      : "width:60px;text-align:center;padding:8px 2px;margin:0;font-size:16px;font-weight:bold;background:#fff3a0;border:2px solid #f0a500;"
+    let sourceLabel=source=="saved"
+      ? `<small style="color:#27ae60;font-size:10px">&#128221; today</small>`
+      : source=="prev"
+      ? `<small style="color:#e67e22;font-size:10px">&#128197; prev</small>`
+      : ""
+
+    let row=document.createElement("div")
+    row.className="entry-row"
+    row.innerHTML=
+      `<div class="row-name">${x.name}<br>${sourceLabel}</div>`+
+      `<div class="qty-ctrl">`+
+      `<button class="qty-btn" onclick="changeQty('${x.name}',-0.5)">&#9660;</button>`+
+      `<input type="number" step="0.5" min="0" id="qty_${x.name}" value="${qty}" style="${inputStyle}">`+
+      `<button class="qty-btn" onclick="changeQty('${x.name}',0.5)">&#9650;</button>`+
+      `</div>`+
+      `<button class="cancel-btn" onclick="cancelEntry('${x.name}')">&#10005;</button>`
+    entryTable.appendChild(row)
   })
-  entryTable.innerHTML=html
 }
 
 function changeQty(name,delta){
