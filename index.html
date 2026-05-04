@@ -186,17 +186,11 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 
 <!-- LEDGER -->
 <div id="ledger" style="display:none">
-<h3>Ledger</h3>
-<div class="filter-row">
-<select id="ledgerType">
-<option value="All">All Types</option>
-<option value="Pickup">Pickup</option>
-<option value="Delivery">Delivery</option>
+<h3>📒 Ledger</h3>
+<div class="date-label">Customer</div>
+<select id="ledgerCustomer" style="margin-bottom:6px">
+<option value="">-- Select Customer --</option>
 </select>
-<select id="ledgerCustomer">
-<option value="All">All Customers</option>
-</select>
-</div>
 <div class="date-label">📅 From Date</div>
 <div class="date-wrap">
 <input type="date" id="ledgerFrom">
@@ -208,11 +202,8 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 <span class="cal-icon">📅</span>
 </div>
 <button onclick="loadLedger()" style="width:100%;margin-top:8px">📒 LOAD LEDGER</button>
-<div class="table" style="margin-top:10px;font-weight:bold">
-<div>Name</div><div>Milk</div><div>Rate</div><div>Bill</div><div>Balance</div>
-</div>
-<div id="ledgerResult"></div>
-<button class="back" onclick="openPage('home')">BACK</button>
+<div id="ledgerResult" style="margin-top:10px;overflow-x:auto"></div>
+<button class="back" onclick="openPage('home')" style="margin-top:10px">BACK</button>
 </div>
 
 <!-- SETTINGS -->
@@ -735,45 +726,154 @@ function savePayment(){
 // ---- LEDGER ----
 function loadLedgerCustomers(){
   let c=getCustomers()
-  let html="<option value='All'>All Customers</option>"
-  c.forEach(x=>{ html+="<option value='"+x.name+"'>"+x.name+"</option>" })
+  let html="<option value=''>-- Select Customer --</option>"
+  c.forEach(x=>{ html+="<option value='"+x.name+"'>"+x.name+" ("+x.type+")</option>" })
   ledgerCustomer.innerHTML=html
-  ledgerType.onchange=function(){
-    let type=ledgerType.value
-    let html="<option value='All'>All Customers</option>"
-    getCustomers().filter(x=>type=="All"||x.type==type).forEach(x=>{
-      html+="<option value='"+x.name+"'>"+x.name+"</option>"
-    })
-    ledgerCustomer.innerHTML=html
-  }
+  // set default dates: first of current month to today
+  let today=new Date()
+  let firstOfMonth=new Date(today.getFullYear(),today.getMonth(),1).toISOString().slice(0,10)
+  ledgerFrom.value=firstOfMonth
+  ledgerTo.value=today.toISOString().slice(0,10)
 }
 
 function loadLedger(){
-  let c=getCustomers()
+  let custName=ledgerCustomer.value
+  if(!custName){ alert("Please select a customer"); return }
+  if(!ledgerFrom.value||!ledgerTo.value){ alert("Please select date range"); return }
+
+  let c=getCustomers().find(x=>x.name==custName)
+  if(!c){ alert("Customer not found"); return }
+
   let entries=JSON.parse(localStorage.getItem("entries")||"{}")
   let payments=JSON.parse(localStorage.getItem("payments")||"{}")
-  let from=new Date(ledgerFrom.value), to=new Date(ledgerTo.value)
-  let filterType=ledgerType.value, filterCust=ledgerCustomer.value, html=""
-  c.forEach(x=>{
-    if(filterType!="All" && x.type!=filterType) return
-    if(filterCust!="All" && x.name!=filterCust) return
-    let total=0
-    Object.keys(entries).forEach(d=>{
-      let dt=new Date(d)
-      if(dt>=from && dt<=to && entries[d][x.name])
-        total+=Number(entries[d][x.name].m||0)+Number(entries[d][x.name].e||0)
-    })
-    let rate=Number(x.type=="Pickup"?ratePickup.value:rateDelivery.value)
-    let bill=total*rate, paid=0
-    Object.keys(payments).forEach(d=>{
-      if(payments[d][x.name]) paid+=Number(payments[d][x.name])
-    })
-    let bal=bill-paid
-    html+="<div class='table' style='background:"+(bal>0?"#fff5f5":"#f5fff5")+";border-radius:4px;padding:5px;margin-bottom:4px'>"+
-    "<div>"+x.name+"</div><div>"+total+"L</div><div>₹"+rate+"</div><div>₹"+bill+"</div>"+
-    "<div style='color:"+(bal>0?"#c0392b":"#27ae60")+"'><b>₹"+bal+"</b></div></div>"
+  let rate=Number(c.type=="Pickup"?ratePickup.value:rateDelivery.value)
+
+  let fromDate=new Date(ledgerFrom.value)
+  let toDate=new Date(ledgerTo.value)
+
+  // --- Opening Balance: all txns BEFORE fromDate ---
+  let openSale=0, openPaid=0
+  Object.keys(entries).forEach(d=>{
+    let dt=new Date(d)
+    if(dt<fromDate && entries[d][custName]){
+      let qty=Number(entries[d][custName].m||0)+Number(entries[d][custName].e||0)
+      openSale+=qty*rate
+    }
   })
-  ledgerResult.innerHTML=html||"<p style='color:#888'>No data found.</p>"
+  Object.keys(payments).forEach(d=>{
+    let dt=new Date(d)
+    if(dt<fromDate && payments[d][custName])
+      openPaid+=Number(payments[d][custName])
+  })
+  let openBal=openSale-openPaid
+
+  // --- Collect all rows in date range ---
+  // Merge entry dates and payment dates
+  let allDates=new Set()
+  Object.keys(entries).forEach(d=>{ if(new Date(d)>=fromDate && new Date(d)<=toDate) allDates.add(d) })
+  Object.keys(payments).forEach(d=>{ if(new Date(d)>=fromDate && new Date(d)<=toDate) allDates.add(d) })
+  let sortedDates=[...allDates].sort()
+
+  let rows=[]
+  sortedDates.forEach(d=>{
+    // Morning entry
+    if(entries[d] && entries[d][custName] && Number(entries[d][custName].m||0)>0){
+      let qty=Number(entries[d][custName].m)
+      let sale=qty*rate
+      rows.push({date:d, session:"M", qty:qty, sale:sale, payment:0})
+    }
+    // Evening entry
+    if(entries[d] && entries[d][custName] && Number(entries[d][custName].e||0)>0){
+      let qty=Number(entries[d][custName].e)
+      let sale=qty*rate
+      rows.push({date:d, session:"E", qty:qty, sale:sale, payment:0})
+    }
+    // Payment
+    if(payments[d] && payments[d][custName] && Number(payments[d][custName])>0){
+      rows.push({date:d, session:"-", qty:0, sale:0, payment:Number(payments[d][custName])})
+    }
+  })
+
+  // --- Build running balance ---
+  let runBal=openBal
+  let totalQty=0, totalSale=0, totalPaid=0
+
+  // --- Render ---
+  let el=document.getElementById("ledgerResult")
+  el.innerHTML=""
+
+  // Customer info box
+  let infoDiv=document.createElement("div")
+  infoDiv.style.cssText="background:#e8f4fd;border-radius:8px;padding:10px 12px;margin-bottom:10px;border-left:4px solid #2f69c6;font-size:14px"
+  infoDiv.innerHTML="<b>"+custName+"</b> &nbsp;|&nbsp; "+c.type+" &nbsp;|&nbsp; ₹"+rate+"/L<br>"+
+    "<small style='color:#555'>Period: "+ledgerFrom.value+" to "+ledgerTo.value+"</small>"
+  el.appendChild(infoDiv)
+
+  // Opening balance row
+  let openDiv=document.createElement("div")
+  openDiv.style.cssText="background:"+(openBal>0?"#fff3cd":"#d4edda")+";border-radius:6px;padding:8px 10px;margin-bottom:6px;font-size:13px;font-weight:bold;display:flex;justify-content:space-between"
+  openDiv.innerHTML="<span>Opening Balance</span><span style='color:"+(openBal>0?"#856404":"#155724")+"'>"+(openBal>0?"Dr":"Cr")+" ₹"+Math.abs(openBal)+"</span>"
+  el.appendChild(openDiv)
+
+  // Table header
+  let tbl=document.createElement("table")
+  tbl.style.cssText="width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1)"
+  let thead=document.createElement("thead")
+  thead.innerHTML="<tr style='background:#2f69c6;color:#fff;text-align:center'>"+
+    "<th style='padding:7px 4px'>Date</th>"+
+    "<th style='padding:7px 4px'>M/E</th>"+
+    "<th style='padding:7px 4px'>Qty(L)</th>"+
+    "<th style='padding:7px 4px'>Sale(₹)</th>"+
+    "<th style='padding:7px 4px'>Paid(₹)</th>"+
+    "<th style='padding:7px 4px'>Bal(₹)</th>"+
+    "</tr>"
+  tbl.appendChild(thead)
+
+  let tbody=document.createElement("tbody")
+  rows.forEach((r,i)=>{
+    runBal+=r.sale-r.payment
+    totalQty+=r.qty
+    totalSale+=r.sale
+    totalPaid+=r.payment
+    let isPayment=r.payment>0
+    let bg=isPayment?"#f0fff4":(i%2==0?"#fff":"#f8f9fa")
+    let balColor=runBal>0?"#c0392b":"#27ae60"
+    let tr=document.createElement("tr")
+    tr.style.background=bg
+    tr.style.textAlign="center"
+    tr.innerHTML=
+      "<td style='padding:6px 4px;font-size:11px'>"+r.date.slice(5)+"</td>"+
+      "<td style='padding:6px 4px'>"+(isPayment?"💰":r.session=="M"?"🌅":"🌆")+"</td>"+
+      "<td style='padding:6px 4px'>"+(r.qty>0?r.qty:"")+"</td>"+
+      "<td style='padding:6px 4px'>"+(r.sale>0?"₹"+r.sale:"")+"</td>"+
+      "<td style='padding:6px 4px;color:#27ae60'>"+(r.payment>0?"₹"+r.payment:"")+"</td>"+
+      "<td style='padding:6px 4px;font-weight:bold;color:"+balColor+"'>₹"+Math.abs(runBal)+"</td>"
+    tbody.appendChild(tr)
+  })
+  tbl.appendChild(tbody)
+
+  // Totals footer
+  let tfoot=document.createElement("tfoot")
+  let closingBal=runBal
+  tfoot.innerHTML="<tr style='background:#2f69c6;color:#fff;font-weight:bold;text-align:center'>"+
+    "<td style='padding:7px 4px' colspan='2'>TOTAL</td>"+
+    "<td style='padding:7px 4px'>"+totalQty+"L</td>"+
+    "<td style='padding:7px 4px'>₹"+totalSale+"</td>"+
+    "<td style='padding:7px 4px'>₹"+totalPaid+"</td>"+
+    "<td style='padding:7px 4px'>"+(closingBal>0?"Dr":"Cr")+" ₹"+Math.abs(closingBal)+"</td>"+
+    "</tr>"
+  tbl.appendChild(tfoot)
+  el.appendChild(tbl)
+
+  // Closing balance box
+  let closeDiv=document.createElement("div")
+  closeDiv.style.cssText="margin-top:10px;background:"+(closingBal>0?"#fff3cd":"#d4edda")+";border-radius:6px;padding:10px 12px;font-size:14px;font-weight:bold;display:flex;justify-content:space-between"
+  closeDiv.innerHTML="<span>Closing Balance</span><span style='color:"+(closingBal>0?"#856404":"#155724")+"'>"+(closingBal>0?"Dr ₹":"Cr ₹")+Math.abs(closingBal)+"</span>"
+  el.appendChild(closeDiv)
+
+  if(rows.length==0){
+    el.innerHTML+="<p style='color:#888;text-align:center;margin-top:10px'>No transactions in this period.</p>"
+  }
 }
 
 // ---- SETTINGS ----
