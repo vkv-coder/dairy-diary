@@ -306,9 +306,19 @@ function getCustomers(){
   return JSON.parse(localStorage.getItem("customers")||"[]")
 }
 
+let _editingCustIndex=-1
+
 function saveCustomer(){
+  if(!custName.value.trim()){ alert("Enter customer name"); return }
   let c=getCustomers()
-  c.push({name:custName.value,phone1:custPhone1.value,phone2:custPhone2.value,type:custType.value,m:Number(custMorning.value||0),e:Number(custEvening.value||0)})
+  let obj={name:custName.value.trim(),phone1:custPhone1.value,phone2:custPhone2.value,type:custType.value,m:Number(custMorning.value||0),e:Number(custEvening.value||0)}
+  if(_editingCustIndex>=0){
+    c[_editingCustIndex]=obj
+    _editingCustIndex=-1
+    document.querySelector(".save-btn").innerText="💾 SAVE CUSTOMER"
+  } else {
+    c.push(obj)
+  }
   localStorage.setItem("customers",JSON.stringify(c))
   loadCustomers()
   custName.value=""; custPhone1.value=""; custPhone2.value=""; custMorning.value=""; custEvening.value=""
@@ -335,8 +345,10 @@ function deleteCustomer(i){
 
 function editCustomer(i){
   let c=getCustomers()[i]
-  custName.value=c.name; custPhone1.value=c.phone1; custPhone2.value=c.phone2
+  custName.value=c.name; custPhone1.value=c.phone1||""; custPhone2.value=c.phone2||""
   custType.value=c.type; custMorning.value=c.m; custEvening.value=c.e
+  _editingCustIndex=i
+  document.querySelector(".save-btn").innerText="✏️ UPDATE CUSTOMER"
   window.scrollTo(0,0)
 }
 
@@ -729,11 +741,19 @@ function loadLedgerCustomers(){
   let html="<option value=''>-- Select Customer --</option>"
   c.forEach(x=>{ html+="<option value='"+x.name+"'>"+x.name+" ("+x.type+")</option>" })
   ledgerCustomer.innerHTML=html
-  // set default dates: first of current month to today
-  let today=new Date()
-  let firstOfMonth=new Date(today.getFullYear(),today.getMonth(),1).toISOString().slice(0,10)
-  ledgerFrom.value=firstOfMonth
-  ledgerTo.value=today.toISOString().slice(0,10)
+  // only set default dates if fields are empty
+  if(!ledgerFrom.value){
+    let now=new Date()
+    let y=now.getFullYear(), mo=now.getMonth()
+    let pad=n=>String(n).padStart(2,"0")
+    ledgerFrom.value=y+"-"+pad(mo+1)+"-01"
+  }
+  if(!ledgerTo.value){
+    let now=new Date()
+    let y=now.getFullYear(), mo=now.getMonth()+1, d=now.getDate()
+    let pad=n=>String(n).padStart(2,"0")
+    ledgerTo.value=y+"-"+pad(mo)+"-"+pad(d)
+  }
 }
 
 function loadLedger(){
