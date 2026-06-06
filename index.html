@@ -213,6 +213,8 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 <input id="ratePickup" placeholder="Pickup Rate" type="number">
 <div class="date-label">Delivery Rate (₹ per litre)</div>
 <input id="rateDelivery" placeholder="Delivery Rate" type="number">
+<div class="date-label">Delivery Charges (₹ per litre short of master qty)</div>
+<input id="rateCancel" placeholder="Cancellation Rate e.g. 10" type="number">
 <button class="save-btn" onclick="saveRates()">💾 SAVE RATES</button>
 <button class="back" onclick="openPage('home')">BACK</button>
 </div>
@@ -498,22 +500,35 @@ function updateBillFromDate(){
 }
 
 function buildWaMessage(item){
-  return "*गोपाल गौ मंदिरम् - Bill*\n\n"+
+  let msg="*गोपाल गौ मंदिरम् - Bill*\n\n"+
   "👤 Customer: *"+item.name+"*\n"+
   "📅 Period: "+item.from+" to "+item.to+"\n"+
-  "🥛 Milk: *"+item.total+" L*\n"+
+  "🥛 Milk Delivered: *"+item.total+" L*\n"+
   "💲 Rate: ₹"+item.rate+" per L\n"+
-  "🧾 Bill: *₹"+item.bill+"*\n"+
-  "⚖️ Balance Due: *₹"+item.balance+"*\n\n"+
+  "🧾 Milk Bill: *₹"+item.bill+"*\n"
+  if(item.cancelCharge>0){
+    msg+="🚚 Delivery Charges: "+item.cancelledQty+"L × ₹"+item.cancelRate+"/L = *₹"+item.cancelCharge+"*\n"
+    msg+="📋 Total Bill: *₹"+item.totalBill+"*\n"
+  }
+  msg+="⚖️ Balance Due: *₹"+item.balance+"*\n\n"+
   "Please pay at your earliest. Thank you! 🙏"
+  return msg
 }
 
 function cleanPhone(p){ return (p||"").replace(/\D/g,"") }
 
+function toWaNumber(p){
+  p=(p||"").replace(/\D/g,"")   // remove +, spaces, dashes — everything non-digit
+  if(!p) return ""
+  if(p.startsWith("91") && p.length>10) p=p.slice(2)  // strip country code if present
+  if(p.startsWith("0")) p=p.slice(1)                   // strip leading 0
+  return "91"+p
+}
+
 function openWa(phone, msg){
-  let p=cleanPhone(phone)
+  let p=toWaNumber(phone)
   if(!p) return
-  window.open("https://wa.me/91"+p+"?text="+encodeURIComponent(msg),"_blank")
+  window.open("https://wa.me/"+p+"?text="+encodeURIComponent(msg),"_blank")
 }
 
 function getBalance(name){
@@ -531,6 +546,13 @@ function generateBills(){
   if(!billFrom.value || !billTo.value){ alert("Please select From and To dates."); return }
   if(from>to){ alert("From Date cannot be after To Date."); return }
 
+  // Count days in billing period
+  let periodDays=0
+  let tempD=new Date(billFrom.value)
+  while(tempD<=to){ periodDays++; tempD.setDate(tempD.getDate()+1) }
+
+  let cancelRate=Number(rateCancel.value)||0
+
   let type=billType.value, cust=billCustomer.value
   let html=""
   billData=[]
@@ -544,12 +566,22 @@ function generateBills(){
       if(dt>=from && dt<=to && entries[d][x.name])
         total+=Number(entries[d][x.name].m||0)+Number(entries[d][x.name].e||0)
     })
-    let rate=Number(x.type=="Pickup"?ratePickup.value:rateDelivery.value)
-    let bill=total*rate
-    let paid=getBalance(x.name)
-    let balance=bill-paid
+    total=Math.round(total*100)/100
 
-    if(bill>0){
+    let rate=Number(x.type=="Pickup"?ratePickup.value:rateDelivery.value)
+    let bill=Math.round(total*rate*100)/100
+
+    // Cancellation charge: master qty × days − actual delivered
+    let masterDaily=Number(x.m||0)+Number(x.e||0)
+    let expectedTotal=Math.round(masterDaily*periodDays*100)/100
+    let cancelledQty=cancelRate>0?Math.max(0,Math.round((expectedTotal-total)*100)/100):0
+    let cancelCharge=Math.round(cancelledQty*cancelRate*100)/100
+
+    let totalBill=Math.round((bill+cancelCharge)*100)/100
+    let paid=getBalance(x.name)
+    let balance=Math.round((totalBill-paid)*100)/100
+
+    if(totalBill>0){
       // get previous bill period BEFORE recording new one
       let bhNow=getBillHistory()
       let prevFrom=bhNow[x.name]&&bhNow[x.name].lastFrom?bhNow[x.name].lastFrom:null
@@ -559,13 +591,17 @@ function generateBills(){
       // save bill history for this customer
       recordBillGenerated(x.name, billFrom.value, billTo.value)
 
-      let item={name:x.name,phone1:x.phone1,phone2:x.phone2,total:total,rate:rate,bill:bill,paid:paid,balance:balance,from:billFrom.value,to:billTo.value}
+      let item={name:x.name,phone1:x.phone1,phone2:x.phone2,total:total,rate:rate,bill:bill,cancelledQty:cancelledQty,cancelRate:cancelRate,cancelCharge:cancelCharge,totalBill:totalBill,paid:paid,balance:balance,from:billFrom.value,to:billTo.value}
       billData.push(item)
 
       let hasPhone=cleanPhone(x.phone1)||cleanPhone(x.phone2)
       let waAction=hasPhone?
         "<button class='wa-btn' onclick='sendSingleWa("+(billData.length-1)+")'>📲 WhatsApp</button>":
         "<span style='font-size:11px;color:#aaa'>No phone</span>"
+
+      let cancelLine=cancelCharge>0?
+        "<span style='color:#e67e22'>🚚 Delivery Charges: "+cancelledQty+"L × ₹"+cancelRate+" = ₹"+cancelCharge+"</span><br>"+
+        "📋 Total Bill: <b>₹"+totalBill+"</b><br>":""
 
       html+="<div class='bill-row'>"+
       "<div>"+
@@ -574,6 +610,7 @@ function generateBills(){
       "<span style='color:#888;font-size:12px'>"+lastPeriodStr+"</span><br>"+
       "<span style='color:#2f69c6;font-size:12px'>🆕 Current: "+billFrom.value+" → "+billTo.value+"</span><br>"+
       "🥛 "+total+"L &nbsp;|&nbsp; ₹"+rate+"/L &nbsp;|&nbsp; 🧾 ₹"+bill+"<br>"+
+      cancelLine+
       "✅ Paid: ₹"+paid+" &nbsp;|&nbsp; <b style='color:"+(balance>0?"#c0392b":"#27ae60")+"'>⚖️ Bal: ₹"+balance+"</b>"+
       "</div>"+
       "</div>"+
@@ -900,6 +937,7 @@ function loadLedger(){
 function saveRates(){
   localStorage.setItem("ratePickup",ratePickup.value)
   localStorage.setItem("rateDelivery",rateDelivery.value)
+  localStorage.setItem("rateCancel",rateCancel.value)
   alert("Rates saved ✅")
 }
 
@@ -944,6 +982,7 @@ function importData(){
 // Init
 ratePickup.value=localStorage.getItem("ratePickup")||90
 rateDelivery.value=localStorage.getItem("rateDelivery")||100
+rateCancel.value=localStorage.getItem("rateCancel")||10
 entryDate.value=new Date().toISOString().slice(0,10)
 
 </script>
