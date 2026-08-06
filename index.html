@@ -3,7 +3,10 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>गोपाल गौ मंदिरम्</title>
-<link rel="icon" href="data:,">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2f69c6">
+<link rel="icon" href="/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -270,6 +273,13 @@ button{padding:12px;border:none;border-radius:6px;background:#2f69c6;color:#fff;
 <p style="font-size:14px;color:#555">Select a previously exported file. <b>This will overwrite current data (locally and in the cloud).</b></p>
 <input type="file" id="restoreFile" accept=".json">
 <button class="restore-btn" onclick="importData()">⬆ IMPORT / RESTORE BACKUP</button>
+
+<div class="section-title" style="margin-top:20px">🔄 MISSING OLD CUSTOMERS?</div>
+<p style="font-size:14px;color:#555">This app checks automatically for data left behind on its old link. If it didn't find anything (e.g. you're on a different phone/browser than before), restore it yourself:<br>
+1. Open <a href="https://vkv-coder.github.io/dairy-diary/" target="_blank" rel="noopener">vkv-coder.github.io/dairy-diary</a> on the <b>same phone and browser</b> you used before.<br>
+2. There, go to Data Backup → Export.<br>
+3. Come back here and Import that file above.</p>
+
 <button class="back" onclick="openPage('home')">BACK</button>
 </div>
 
@@ -1185,6 +1195,15 @@ function exportData(){
   a.click()
 }
 
+function applyRestoreData(data){
+  if(data.customers) localStorage.setItem("customers",JSON.stringify(data.customers))
+  if(data.entries) localStorage.setItem("entries",JSON.stringify(data.entries))
+  if(data.payments) localStorage.setItem("payments",JSON.stringify(data.payments))
+  if(data.billHistory) localStorage.setItem("billHistory",JSON.stringify(data.billHistory))
+  if(data.ratePickup) localStorage.setItem("ratePickup",data.ratePickup)
+  if(data.rateDelivery) localStorage.setItem("rateDelivery",data.rateDelivery)
+}
+
 function importData(){
   let file=document.getElementById("restoreFile").files[0]
   if(!file){ alert("Please select a backup file"); return }
@@ -1200,9 +1219,108 @@ function importData(){
   reader.readAsText(file)
 }
 
+// ---- AUTO-MIGRATION: recover data left behind on the old github.io URL ----
+// This app used to live at OLD_URL before the gaushala.anyapps.in custom domain
+// was attached (2026-07-14). localStorage is per-origin, so anything saved
+// before that date is invisible here. This silently checks the old origin via
+// a hidden iframe + postMessage handshake and offers a one-tap restore.
+// Same index.html is served at both origins, so both roles live in one file.
+(function(){
+  var OLD_ORIGIN="https://vkv-coder.github.io"
+  var OLD_PATH="/dairy-diary/"
+  var NEW_ORIGIN="https://gaushala.anyapps.in"
+  var params=new URLSearchParams(location.search)
+
+  // Role A: running on the OLD origin, inside the hidden iframe, asked to hand off its data
+  if(params.get("migrate")==="1"){
+    window.addEventListener("message",function(ev){
+      if(ev.origin!==NEW_ORIGIN || ev.data!=="REQUEST_DAIRY_DATA") return
+      var payload={
+        type:"DAIRY_DATA_RESPONSE",
+        customers:JSON.parse(localStorage.getItem("customers")||"[]"),
+        entries:JSON.parse(localStorage.getItem("entries")||"{}"),
+        payments:JSON.parse(localStorage.getItem("payments")||"{}"),
+        billHistory:JSON.parse(localStorage.getItem("billHistory")||"{}"),
+        ratePickup:localStorage.getItem("ratePickup")||"",
+        rateDelivery:localStorage.getItem("rateDelivery")||""
+      }
+      if(ev.source) ev.source.postMessage(payload,NEW_ORIGIN)
+    })
+    if(window.parent!==window) window.parent.postMessage("DAIRY_MIGRATE_READY",NEW_ORIGIN)
+    return
+  }
+
+  // Role B: running on the NEW origin — check once for leftover old data
+  if(location.hostname!=="gaushala.anyapps.in") return
+  if(localStorage.getItem("migrationChecked_v1")) return
+
+  var iframe=document.createElement("iframe")
+  iframe.style.display="none"
+  var settled=false
+
+  function cleanup(){
+    if(iframe.parentNode) iframe.parentNode.removeChild(iframe)
+  }
+  var timer=setTimeout(function(){
+    if(settled) return
+    settled=true
+    cleanup()
+    // couldn't confirm either way (offline / blocked / old page gone) — don't mark
+    // as checked, so it quietly tries again on a future visit
+  },6000)
+
+  window.addEventListener("message",function(ev){
+    if(ev.origin!==OLD_ORIGIN) return
+    if(ev.data==="DAIRY_MIGRATE_READY"){
+      if(iframe.contentWindow) iframe.contentWindow.postMessage("REQUEST_DAIRY_DATA",OLD_ORIGIN)
+      return
+    }
+    if(ev.data && ev.data.type==="DAIRY_DATA_RESPONSE"){
+      if(settled) return
+      settled=true
+      clearTimeout(timer)
+      cleanup()
+      var oldHasData=(ev.data.customers&&ev.data.customers.length>0)||Object.keys(ev.data.entries||{}).length>0
+      if(oldHasData) showMigrationPrompt(ev.data)
+      else localStorage.setItem("migrationChecked_v1","1")
+    }
+  })
+
+  function showMigrationPrompt(data){
+    var hasExisting=JSON.parse(localStorage.getItem("customers")||"[]").length>0
+    var box=document.createElement("div")
+    box.style.cssText="position:fixed;left:10px;right:10px;bottom:10px;background:#fff;border:2px solid #2f69c6;border-radius:10px;padding:14px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);font-size:14px"
+    box.innerHTML=
+      "<b>📦 Old data found</b><br>"+
+      "Found "+(data.customers?data.customers.length:0)+" customer(s) saved from the previous app link.<br>"+
+      (hasExisting?"<b style='color:#e67e22'>This device already has data — restoring will OVERWRITE it.</b><br>":"")+
+      "<br><button id='migYes' style='background:#27ae60;color:#fff;border:none;border-radius:6px;padding:10px;margin-right:8px'>✅ Restore it</button>"+
+      "<button id='migNo' style='background:#999;color:#fff;border:none;border-radius:6px;padding:10px'>Not now</button>"
+    document.body.appendChild(box)
+    document.getElementById("migYes").onclick=function(){
+      applyRestoreData(data)
+      localStorage.setItem("migrationChecked_v1","1")
+      alert("Old data restored ✅ Reloading...")
+      location.reload()
+    }
+    document.getElementById("migNo").onclick=function(){
+      localStorage.setItem("migrationChecked_v1","1")
+      box.remove()
+    }
+  }
+
+  iframe.src=OLD_ORIGIN+OLD_PATH+"?migrate=1"
+  document.body.appendChild(iframe)
+})()
+
 // Init
 checkExistingSession()
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
