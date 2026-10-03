@@ -350,7 +350,7 @@ async function doLogin(){
 async function doForgot(){
   let email=document.getElementById('forgotEmail').value.trim()
   if(!email){ setLoginMsg('Enter your email', true); return }
-  let {error}=await sb.auth.resetPasswordForEmail(email)
+  let {error}=await sb.auth.resetPasswordForEmail(email, {redirectTo: window.location.origin + window.location.pathname})
   if(error){ setLoginMsg(error.message, true); return }
   setLoginMsg('✅ Reset link sent if that email is registered.', false)
 }
