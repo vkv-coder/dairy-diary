@@ -437,7 +437,7 @@ async function maybeMigrateLocalStorage(){
   let oldRatePickup = localStorage.getItem('ratePickup')
   let oldRateDelivery = localStorage.getItem('rateDelivery')
 
-  await pushBulkDataToSupabase({
+  let error=await pushBulkDataToSupabase({
     customers: oldCustomers,
     entries: oldEntries,
     payments: oldPayments,
@@ -445,6 +445,7 @@ async function maybeMigrateLocalStorage(){
     ratePickup: oldRatePickup,
     rateDelivery: oldRateDelivery
   })
+  if(error){ alert('Could not back up existing data to the cloud: '+error.message); return }
   await loadStateFromSupabase()
   alert('✅ Found existing data on this device — backed up to the cloud automatically.')
 }
@@ -454,7 +455,8 @@ async function maybeMigrateLocalStorage(){
 async function pushBulkDataToSupabase(data){
   if(data.customers && data.customers.length){
     let rows=data.customers.map(c=>({name:c.name,phone1:c.phone1||'',phone2:c.phone2||'',type:c.type,morning_qty:Number(c.m||0),evening_qty:Number(c.e||0)}))
-    await sb.from('gau_customers').insert(rows)
+    let {error}=await sb.from('gau_customers').insert(rows)
+    if(error) return error
   }
   if(data.entries){
     let rows=[]
@@ -466,22 +468,32 @@ async function pushBulkDataToSupabase(data){
         })
       })
     })
-    if(rows.length) await sb.from('gau_entries').upsert(rows,{onConflict:'owner_id,customer_name,entry_date,session'})
+    if(rows.length){
+      let {error}=await sb.from('gau_entries').upsert(rows,{onConflict:'owner_id,customer_name,entry_date,session'})
+      if(error) return error
+    }
   }
   if(data.payments){
     for(let date of Object.keys(data.payments)){
       for(let name of Object.keys(data.payments[date])){
         let amt=Number(data.payments[date][name]||0)
-        if(amt>0) await sb.rpc('gau_add_payment',{p_customer_name:name,p_date:date,p_amount:amt})
+        if(amt>0){
+          let {error}=await sb.rpc('gau_add_payment',{p_customer_name:name,p_date:date,p_amount:amt})
+          if(error) return error
+        }
       }
     }
   }
   if(data.billHistory){
     let rows=Object.keys(data.billHistory).map(name=>({customer_name:name,last_from:data.billHistory[name].lastFrom,last_to:data.billHistory[name].lastTo}))
-    if(rows.length) await sb.from('gau_bill_history').upsert(rows,{onConflict:'owner_id,customer_name'})
+    if(rows.length){
+      let {error}=await sb.from('gau_bill_history').upsert(rows,{onConflict:'owner_id,customer_name'})
+      if(error) return error
+    }
   }
   if(data.ratePickup || data.rateDelivery){
-    await sb.from('gau_settings').upsert({rate_pickup:Number(data.ratePickup||90),rate_delivery:Number(data.rateDelivery||100)},{onConflict:'owner_id'})
+    let {error}=await sb.from('gau_settings').upsert({rate_pickup:Number(data.ratePickup||90),rate_delivery:Number(data.rateDelivery||100)},{onConflict:'owner_id'})
+    if(error) return error
   }
 }
 
@@ -548,7 +560,8 @@ async function saveCustomer(){
 
   if(_editingCustIndex>=0){
     let id=state.customers[_editingCustIndex].id
-    await sb.from('gau_customers').update(row).eq('id',id)
+    let {error}=await sb.from('gau_customers').update(row).eq('id',id)
+    if(error){ alert('Error saving customer: '+error.message); return }
     obj.id=id
     state.customers[_editingCustIndex]=obj
     _editingCustIndex=-1
@@ -579,7 +592,8 @@ function loadCustomers(){
 async function deleteCustomer(i){
   if(!confirm("Delete this customer?")) return
   let id=state.customers[i].id
-  await sb.from('gau_customers').delete().eq('id',id)
+  let {error}=await sb.from('gau_customers').delete().eq('id',id)
+  if(error){ alert('Error deleting customer: '+error.message); return }
   state.customers.splice(i,1)
   loadCustomers()
 }
@@ -1215,7 +1229,8 @@ function importData(){
   reader.onload=async function(e){
     try{
       let data=JSON.parse(e.target.result)
-      await pushBulkDataToSupabase(data)
+      let error=await pushBulkDataToSupabase(data)
+      if(error){ alert("Error restoring data: "+error.message); return }
       alert("Data restored ✅ Reloading..."); location.reload()
     }catch(err){ alert("Invalid backup file: "+err.message) }
   }
