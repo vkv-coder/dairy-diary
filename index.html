@@ -390,6 +390,9 @@ async function loadStateFromSupabase(){
     sb.from('gau_settings').select('rate_pickup,rate_delivery,rate_cancel').maybeSingle()
   ])
 
+  const loadErr = custRes.error||entRes.error||payRes.error||bhRes.error||setRes.error
+  if(loadErr){ alert('Could not load your data from the cloud: '+loadErr.message+'. Please check your connection and reload - do NOT re-enter data, it may already be there.'); return }
+
   state.customers = (custRes.data||[]).map(c=>({id:c.id,name:c.name,phone1:c.phone1||'',phone2:c.phone2||'',type:c.type,m:Number(c.morning_qty||0),e:Number(c.evening_qty||0)}))
 
   state.entries = {}
